@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# memory_report
+#
+# check if any process is using more than its share of memory
+#
+# Written by Brett Pemberton, brett@vpac.org
+# Copyright (C) 2008 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+for pid in $(ps --no-headers ax -o pid,user:20,cputime,etime,pmem,pcpu,cmd | grep -v [0-9]" root\| rpc \|dbus \| ntp\| ganglia \| smmsp \| xfs \|haldaemon" | awk '{if ($5 > 12) { print $1 }}')
+do
+	user=$(ps --no-headers ax -o pid,user:20 | awk -v pid=$pid '{ if ($1 == pid) { print $2 } }')
+	job=$(cat /proc/$pid/cpuset | sed 's#/torque/\([0-9]*\)\..*#\1#')
+	mem_percent=$(ps --no-headers ax -o pid,pmem | awk -v pid=$pid '{  if ($1 == pid) { print $2 } }')
+	mem_total=$(free | awk '/^Mem/{print $2}')
+	mem_used=$(echo "scale=0; $mem_total*$mem_percent/100/1024" | bc)
+	mem_requested=$(qstat -f $job | awk '/Resource_List.pmem/{print $3}')
+	mb_count=$(echo $mem_requested | egrep -c "[0-9]*mb")
+	if [ $mb_count -eq 1 ]
+	then
+		mem_requested_mb=$(echo $mem_requested | sed 's/mb$//')
+	else
+		mem_requested_mb=$(echo $(echo $mem_requested | sed 's/gb$//') " * 1024" | bc)
+	fi
+
+	if [ $mem_requested_mb -lt $mem_used ]
+	then
+		echo "BAD: pid: $pid ; user: $user ; job: $job ; mem: $mem_percent ; mem_requested (mb): $mem_requested_mb ; mem_used (mb): ${mem_used}"
+	else
+		echo "OK: pid: $pid ; user: $user ; job: $job ; mem: $mem_percent ; mem_requested (mb): $mem_requested_mb ; mem_used (mb): ${mem_used}"
+	fi
+
+done

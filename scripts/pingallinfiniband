@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# pingallinfiniband
+#
+# ping all infiniband adaptors
+#
+# Written by Brett Pemberton, brett@vpac.org
+# Copyright (C) 2008 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+source /usr/local/recluse/config
+
+rm -f /usr/local/recluse/nodestatus/infiniband/$HOSTNAME
+
+for i in `seq 1 $number_of_compute_nodes`
+do
+	ping -c 1 172.17.2.$i 2>&1 >/dev/null
+	if [ $? -ne 0 ]
+	then
+		echo "172.17.2.$i couldn't be reached by $HOSTNAME" >> /usr/local/recluse/nodestatus/infiniband/$HOSTNAME
+	fi
+done

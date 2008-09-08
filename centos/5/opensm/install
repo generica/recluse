@@ -1,0 +1,6 @@
+rpm -ivh opensm-latest/*.rpm
+cp opensm.conf /etc/ofa/
+chkconfig --add opensmd
+chkconfig --level 345 opensmd on
+/etc/init.d/opensmd start
+

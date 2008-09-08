@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# config options
+
+cluster="tango"
+mgtnode="tango-m.vpac.org"
+number_of_compute_nodes=95
+
+mirror="rsync://mirror.aarnet.edu.au/"
+centosversion="5"

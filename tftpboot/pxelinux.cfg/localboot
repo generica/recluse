@@ -1,0 +1,9 @@
+# Perform a local boot
+default local
+# Don't prompt
+prompt 0
+# Display the bootup message
+display localboot/install.msg
+
+label local
+        localboot 0

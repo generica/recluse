@@ -1,0 +1,78 @@
+#!/bin/bash
+
+# nodefreein
+#
+# determine how long till a node will be free,
+# by querying moab
+#
+# Written by Brett Pemberton, brett@vpac.org
+# Copyright (C) 2008 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+if [ $# -ne 1 ]
+then
+	echo "usage: $0 <node>"
+	exit 1
+fi
+
+echo -n "node $1 "
+checknode $1 | 
+	awk '/Running/{print $5}' | 
+	awk -F\: '
+		BEGIN { highsecs=0 }
+		{ 
+			if( NF == 4 ) 
+				{ secs=($1*86400)+($2*3600)+($3*60)+($4) } 
+			else 
+				{ secs=($1*3600)+($2*60)+($3) }
+			if( secs > highsecs ) 
+				{ highsecs=secs }
+		}
+		END {
+			days = sprintf("%d",(highsecs / 86400)); 
+			sss  = sprintf("%d",(highsecs % 86400));
+			hh  =  (sss / 3600.000000);
+			sss =  (sss % 3600.000000);
+			mm  =  (sss / 60.000000);
+			ss  =  (sss % 60);
+
+			if(highsecs == 0) {
+				printf("is free\n")
+			} else {
+				printf("will be free in %02d:%02d:%02d:%02d", days, hh, mm, ss)
+			}
+		}'
+secstillfree=$(checknode $1 | 
+	awk '/Running/{print $5}' | 
+	awk -F\: '
+		BEGIN { highsecs=0 }
+		{ 
+			if( NF == 4 ) 
+				{ secs=($1*86400)+($2*3600)+($3*60)+($4) } 
+			else 
+				{ secs=($1*3600)+($2*60)+($3) }
+			if( secs > highsecs ) 
+				{ highsecs=secs }
+		}
+		END {
+			print highsecs
+		}');
+
+if [ $secstillfree -gt 0 ]
+then
+	datefree=$(date --date "+ $secstillfree seconds")
+	echo " - $datefree"
+fi
+

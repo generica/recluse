@@ -1,0 +1,10 @@
+# Perform an install
+default install
+# Don't prompt
+prompt 0
+# Display the bootup message
+display centos5/install.msg
+
+label install
+	kernel centos5/vmlinuz
+	append acpi=off initrd=centos5/initrd.img ks=http://tango-m/centos/5/ks-compute.cfg ksdevice=eth0 ramdisk=8192 noselinux selinux=0

@@ -1,0 +1,9 @@
+# Perform an install
+default memtest
+# Don't prompt
+prompt 0
+# Display the bootup message
+display memtest/install.msg
+
+label memtest
+	kernel memtest/memtest.img
