@@ -28,7 +28,11 @@ NODETYPE="compute"
 export PBSCOREDUMP=true
 
 source /etc/init.d/functions
-source /usr/local/recluse/config
+
+CONFIG=/usr/local/recluse/config
+[ -r "$CONFIG" ] || echo "Can't source $CONFIG"
+[ -r "$CONFIG" ] || exit 0
+source $CONFIG
 
 PATH=$PATH:/usr/local/sbin:/usr/local/bin
 
