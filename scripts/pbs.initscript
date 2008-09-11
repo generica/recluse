@@ -37,6 +37,13 @@ source $CONFIG
 PATH=$PATH:/usr/local/sbin:/usr/local/bin
 
 start() {
+	if [ -e /etc/starttorque ]
+	then
+		rm -f /etc/starttorque
+	else
+		return 1;
+	fi
+
 	if [ "$NODETYPE" = "managment" ]
 	then
 		PID=$(pidofproc pbs_server)
