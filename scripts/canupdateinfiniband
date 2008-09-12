@@ -30,7 +30,8 @@ use=$(lsof $ulist | grep -c ibv)
 if [ $use -eq 0 ]
 then
 	echo "Nobody using infiniband, will update"
+	exit 0
 else
 	echo "Infiniband in use, cancelling update"
-	exit 0
+	exit 1
 fi
