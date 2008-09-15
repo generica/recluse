@@ -20,9 +20,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-if [ $# -ne 1 ]
+printemail=0
+
+while getopts ":e" option
+do
+	case $option in
+		e) printemail=1;;
+	esac
+done
+
+shift $(($OPTIND - 1))
+
+if [ $# -eq 0 ]
 then
-	echo "usage: $0 <node>"
+	echo "usage: $0 [-e] <node>"
 	exit 1
 fi
 
@@ -34,5 +45,11 @@ for job in $(echo $joblist | tr ',' '\n')
 do
 	user=$(checkjob $job | awk -F: '/user/{print $3}' | awk '{print $1}');
 	duration=$(checkjob $job | awk '/Duration/{print $3 " " $4 " " $5 " " $6 " " $7 " " $8}');
-	echo "job: $job - $user - $duration"
+	email=$(cat /home/$user/.forward | grep @)
+	if [ $printemail -eq 1 ]
+	then
+		echo "job: $job - $user - $email"
+	else
+		echo "job: $job - $user - $duration"
+	fi
 done
