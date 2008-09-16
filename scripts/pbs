@@ -37,6 +37,17 @@ source $CONFIG
 PATH=$PATH:/usr/local/sbin:/usr/local/bin
 
 start() {
+	parent=$(ps aux | awk -v PPID=$PPID '{ if ($2 == PPID) { print $11 " " $12}}')
+        if [ "$parent" == "/bin/bash /etc/rc.d/rc" ]
+	then
+		if [ -e /etc/starttorque ]
+	        then
+	                rm -f /etc/starttorque
+	        else
+	                return 1;
+	        fi
+	fi
+
 	if [ "$NODETYPE" = "managment" ]
 	then
 		PID=$(pidofproc pbs_server)
