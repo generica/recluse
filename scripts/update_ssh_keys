@@ -21,9 +21,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ETH_IP=`ifconfig eth0 | grep "inet addr:" | cut -d: -f 2 | cut -d' ' -f 1`
+
+# if they aren't stored, store them
 if [ ! -d /usr/local/recluse/nodestatus/ssh/${ETH_IP}/ -a -e /etc/ssh/ssh_host_dsa_key ]
 then
 	mkdir /usr/local/recluse/nodestatus/ssh/${ETH_IP}/
 	cp -vpf /etc/ssh/*key* /usr/local/recluse/nodestatus/ssh/${ETH_IP}/
 fi
 
+# if they don't exist, and are stored, grab them
+if [ -d /usr/local/recluse/nodestatus/ssh/${ETH_IP}/ -a ! -e /etc/ssh/ssh_host_dsa_key ]
+then
+	cp -vpf /usr/local/recluse/nodestatus/ssh/${ETH_IP}/*key* /etc/ssh/
+fi
