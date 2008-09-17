@@ -36,7 +36,7 @@ else
 	exit
 fi
 
-machine_ip=$(grep ${machine}.vpac.org /etc/hosts | awk '{print $1}')
+machine_ip=$(grep -w ${machine}$ /etc/hosts | awk '{print $1}')
 hex_machine=$(echo "$machine_ip" | awk -F. '{ for ( i=1; i<=NF; ++i ) printf ("%02x", $i % 256); print "" }' | tr '[a-z]' '[A-Z]')
 if [ -f $dir/$hex_machine ]
 then
