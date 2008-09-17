@@ -51,7 +51,7 @@ then
 	exit 1
 fi
 
-ipaddr=$(grep ${node}.vpac.org /etc/hosts | awk '{print $1}')
+ipaddr=$(grep -w ${machine}$ /etc/hosts | awk '{print $1}')
 
 if [ -z $ipaddr ]
 then
