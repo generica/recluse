@@ -8,3 +8,12 @@ number_of_compute_nodes=95
 
 mirror="rsync://mirror.aarnet.edu.au"
 centosversion="5"
+
+myrinet=0
+infiniband=1
+
+compute_node_smart_drives="/dev/sda /dev/sdb /dev/sdc /dev/sdd"
+head_node_smart_drives="/dev/sda /dev/sdb /dev/sdc /dev/sdd"
+mgt_node_smart_drives=""
+
+ipmi_user=ADMIN
