@@ -22,7 +22,7 @@
 root=/usr/local/recluse/root/
 root_head=/usr/local/recluse/root_head/
 
-opts="-aK"
+opts="-aK --exclude=.svn"
 
 hostname=$(hostname | sed -e 's/\..*//')
 cluster=$(echo $hostname | sed -e 's/[0-9][0-9][0-9]//' -e 's/-m$//')
@@ -35,7 +35,7 @@ fi
 
 if [ x"$1" != x"-s" ]
 then
-	opts="$opts"v
+	opts="-v $opts"
 fi
 
 # if we get an argument to the script, it will either be "head" or "compute"
