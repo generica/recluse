@@ -61,4 +61,4 @@ then
 	op="reset"
 fi
 
-ipmitool -U ADMIN -f /etc/ipmi_pass -H $node_mgt power $op
+ipmitool -U $ipmi_user -f /etc/ipmi_pass -H $node_mgt power $op
