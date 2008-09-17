@@ -38,6 +38,13 @@ fi
 
 machine_ip=$(grep -w ${machine}$ /etc/hosts | awk '{print $1}')
 hex_machine=$(echo "$machine_ip" | awk -F. '{ for ( i=1; i<=NF; ++i ) printf ("%02x", $i % 256); print "" }' | tr '[a-z]' '[A-Z]')
+
+if [ -z $hex_machine ]
+then
+	echo "ERROR: machine $machine cannot be found in /etc/hosts"
+	exit
+fi
+
 if [ -f $dir/$hex_machine ]
 then
 	status_machine=$(\ls -l $dir/$hex_machine | awk -F" -> " '{print $2}')
