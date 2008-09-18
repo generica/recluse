@@ -53,7 +53,7 @@ then
 	exit 1
 fi
 
-if [ `grep -c -w " $ipaddr " /etc/dhcpd.conf` -eq 0 ]
+if [ `grep -c -w "$ipaddr" /etc/dhcpd.conf` -eq 0 ]
 then
 	echo "Node $node is not in /etc/dhcpd.conf"
 	echo "Add it with a static ip, and try again"
