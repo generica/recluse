@@ -106,12 +106,15 @@ fi
 
 count=0
 
-for drive in $drives
-do
-	count=$[$count+$(/usr/sbin/smartctl -a -d ata $drive | grep "^198" | awk '{print $10}')]
-	/usr/sbin/smartctl -d ata -H $drive > /dev/null
-	count=$[$count+$?]
-done
+if [ -x /usr/sbin/smartctl ]
+then
+	for drive in $drives
+	do
+		count=$[$count+$(/usr/sbin/smartctl -a $smart_options $drive | grep "^198" | awk '{print $10}')]
+		/usr/sbin/smartctl $smart_options -H $drive > /dev/null
+		count=$[$count+$?]
+	done
+fi
 
 if [ $count -ne 0 ]
 then
