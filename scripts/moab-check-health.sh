@@ -110,7 +110,11 @@ if [ -x /usr/sbin/smartctl ]
 then
 	for drive in $drives
 	do
-		count=$[$count+$(/usr/sbin/smartctl -a $smart_options $drive | grep "^198" | awk '{print $10}')]
+		offline=$(/usr/sbin/smartctl -a $smart_options $drive | grep "^198" | awk '{print $10}')
+		if [ ! -z $offline ]
+		then
+			count=$[$count+$offline]
+		fi
 		/usr/sbin/smartctl $smart_options -H $drive > /dev/null
 		count=$[$count+$?]
 	done
