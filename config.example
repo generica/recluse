@@ -15,6 +15,7 @@ infiniband=1
 compute_node_smart_drives="/dev/sda /dev/sdb /dev/sdc /dev/sdd"
 head_node_smart_drives="/dev/sda /dev/sdb /dev/sdc /dev/sdd"
 mgt_node_smart_drives=""
+smart_options="-d ata"
 
 ipmi_user=ADMIN
 
