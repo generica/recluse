@@ -17,3 +17,8 @@ head_node_smart_drives="/dev/sda /dev/sdb /dev/sdc /dev/sdd"
 mgt_node_smart_drives=""
 
 ipmi_user=ADMIN
+
+storage_server="stg5"
+compute_runs_xvfb=1
+
+user_lookup=brett

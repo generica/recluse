@@ -150,7 +150,7 @@ then
 	exit 1
 fi
 
-count=$(grep -c "^stg" /proc/mounts)
+count=$(grep -c "^$storage_server" /proc/mounts)
 
 if [ $count -lt 1 ]
 then
@@ -192,7 +192,7 @@ fi
 #	exit 1
 #fi
 
-count=$(dmesg | grep -Eci "BUG:")
+count=$(dmesg | grep -Ec "BUG:")
 
 if [ $count -ne 0 ]
 then
@@ -200,7 +200,7 @@ then
 	exit 1
 fi
 
-count=$(dmesg | grep -Eci "kernel BUG")
+count=$(dmesg | grep -Ec "kernel BUG")
 
 if [ $count -ne 0 ]
 then
@@ -227,7 +227,7 @@ fi
 #	exit 1
 #fi
 
-if [ "$node" == "compute" ]
+if [ "$node" == "compute" -a $compute_runs_xvfb -eq 1 ]
 then
 	search=Xvfb
 
@@ -240,12 +240,12 @@ then
 	fi
 fi
 
-id brett &>/dev/null;
+id $user_lookup &>/dev/null;
 count=$?
 
 if [ $count -ne 0 ]
 then
-	echo "ERROR ldap failed"
+	echo "ERROR user lookup failed"
 	exit 1
 fi
 
