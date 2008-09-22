@@ -20,6 +20,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+verbose=0
+
+while getopts ":v" option
+do
+	case $option in
+		v) verbose=1;;
+	esac
+done
+
+shift $(($OPTIND - 1))
+
 for pid in $(ps --no-headers ax -o pid,user:20,cputime,etime,pmem,pcpu,cmd | grep -v [0-9]" root\| rpc \|dbus \| ntp\| ganglia \| smmsp \| xfs \|haldaemon" | awk '{if ($5 > 12) { print $1 }}')
 do
 	user=$(ps --no-headers ax -o pid,user:20 | awk -v pid=$pid '{ if ($1 == pid) { print $2 } }')
@@ -44,9 +55,16 @@ do
 
 	if [ $mem_requested -lt $mem_used ]
 	then
-		echo -e "BAD: pid: $pid\t; user: $user\t; job: $job\t; mem: $mem_percent ; mem_requested (mb): $mem_requested ; mem_used (mb): ${mem_used}"
+		diff=$(echo $mem_used " - " $mem_requested | bc)
+		if [ $verbose -eq 1 -o $diff -gt 512 ]
+		then
+			echo -e "BAD: pid: $pid\t; user: $user\t; job: $job\t; mem: $mem_percent ; mem_requested (mb): $mem_requested ; mem_used (mb): ${mem_used}"
+		fi
 	else
-		echo -e "OK : pid: $pid\t; user: $user\t; job: $job\t; mem: $mem_percent ; mem_requested (mb): $mem_requested ; mem_used (mb): ${mem_used}"
+		if [ $verbose -eq 1 ]
+		then
+			echo -e "OK : pid: $pid\t; user: $user\t; job: $job\t; mem: $mem_percent ; mem_requested (mb): $mem_requested ; mem_used (mb): ${mem_used}"
+		fi
 	fi
 
 done
