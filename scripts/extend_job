@@ -20,9 +20,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+test=0
+
+while getopts ":t" option
+do
+	case $option in
+		t) test=1;;
+	esac
+done
+
+shift $(($OPTIND - 1))
+
 if [ $# -ne 2 ]
 then
-	echo "usage: $0 <job id> <hours to extend by>"
+	echo "usage: $0 [-t] <job id> <hours to extend by>"
 	exit 1
 fi
 
@@ -37,7 +48,7 @@ then
 	exit 1
 fi
 
-test=$(qstat -f $job)
+check=$(qstat -f $job)
 
 if [ $? -ne 0 ]
 then
@@ -51,4 +62,7 @@ new_walltime=$(echo $walltime | awk -v h=$hours -F: '{print $1+h ":" $2 ":" $3}'
 echo "old walltime: $walltime"
 echo "new walltime: $new_walltime"
 
-qalter -l walltime=$new_walltime $job
+if [ $test -eq 0 ]
+then
+	qalter -l walltime=$new_walltime $job
+fi
