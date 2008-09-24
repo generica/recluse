@@ -32,7 +32,7 @@ do
 	ulist="$ulist -u $user"
 done
 
-use=$(lsof $ulist | grep -c libibverbs.so)
+use=$(lsof $ulist | grep -c /dev/infiniband/)
 
 if [ $use -eq 0 ]
 then
