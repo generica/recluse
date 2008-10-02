@@ -165,7 +165,7 @@ then
 	exit 1
 fi
 
-count=$(dmesg | grep -Eci "SCSI Error|I/O Error")
+count=$(dmesg | grep -Ec "SCSI Error|I/O Error")
 
 if [ $count -ne 0 ]
 then
@@ -173,7 +173,7 @@ then
 	exit 1
 fi
 
-count=$(dmesg | grep -Eci "BUG: soft lockup")
+count=$(dmesg | grep -Ec "BUG: soft lockup")
 
 if [ $count -ne 0 ]
 then
@@ -181,7 +181,7 @@ then
 	exit 1
 fi
 
-count=$(dmesg | grep -Eci "kernel BUG at lib/list_debug.c:72")
+count=$(dmesg | grep -Ec "kernel BUG at lib/list_debug.c:72")
 
 if [ $count -ne 0 ]
 then
@@ -191,7 +191,7 @@ fi
 
 # taking this out, seems to be just storage problems - bp july 10 2008
 #
-#count=$(dmesg | grep -Eci "INFO: task .* blocked")
+#count=$(dmesg | grep -Ec "INFO: task .* blocked")
 #
 #if [ $count -ne 0 ]
 #then
@@ -215,7 +215,7 @@ then
 	exit 1
 fi
 
-count=$(dmesg | grep -Eci "invalid opcode:")
+count=$(dmesg | grep -Ec "invalid opcode:")
 
 if [ $count -ne 0 ]
 then
@@ -226,7 +226,7 @@ fi
 # have to take this out too to stop blocked jobs being reported
 # bp - july 10 2008
 #
-#count=$(dmesg | grep -Eci "Call Trace:")
+#count=$(dmesg | grep -Ec "Call Trace:")
 #
 #if [ $count -ne 0 ]
 #then
