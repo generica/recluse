@@ -12,6 +12,9 @@ centosversion="5"
 myrinet=0
 infiniband=1
 
+# whitespace separated list of hosts without myrinet for this cluster
+nomyrinet=""
+
 compute_node_smart_drives="/dev/sda /dev/sdb /dev/sdc /dev/sdd"
 head_node_smart_drives="/dev/sda /dev/sdb /dev/sdc /dev/sdd"
 mgt_node_smart_drives=""
