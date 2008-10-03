@@ -40,7 +40,9 @@ fi
 
 # perform tests here
 
-if [ $myrinet -eq 1 ]
+host_myrinet=$(echo $nomyrinet | grep -c -w "$hostname")
+
+if [ $myrinet -eq 1 -a $host_myrinet -eq 0 ]
 then
 	count=$(/sbin/lspci -v -d "14c1:" | grep "Memory" | sed 's/.*(\(.*\),.*/\1/')
 	# should be 64-bit
