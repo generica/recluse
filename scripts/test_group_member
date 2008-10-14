@@ -46,8 +46,11 @@ then
 	echo -e "You can join the group by using the 'Add Software' link and agree to the License terms"
 	echo -e "\nPlease email help@vpac.org if you have any questions\n"
 
-	if [ -d /usr/local/recluse/nodestatus/software ]
-	then
-		echo "$USER is not in group, attempted at $(date)" >> /usr/local/recluse/nodestatus/software/$group
-	fi
+# bad idea. user won't have privs for this
+#
+#	if [ -d /usr/local/recluse/nodestatus/software ]
+#	then
+#		echo "$USER is not in group, attempted at $(date)" >> /usr/local/recluse/nodestatus/software/$group
+#	fi
+
 fi
