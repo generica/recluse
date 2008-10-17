@@ -172,32 +172,23 @@ class ProgressBar:
     
         20% [===========----------------------------------]
 
-    The progress bar is colored, if the terminal supports color
-    output; and adjusts to half the width of the terminal.
+    The progress bar is colored, if the terminal supports color output
     """
         
     def __init__(self, term, percent, width):
         self.term = term
-        if not (self.term.CLEAR_EOL and self.term.UP and self.term.BOL):
-            raise ValueError("Terminal isn't capable enough -- you "
-                             "should use a simpler progress dispaly.")
-#        self.width = self.term.COLS / 2 or 75
 
-        if percent > 1:
+        if percent >= 1:
             percent = 1
-
-        if percent < .5:
-            colour = "${GREEN}"
-        elif percent < 1:
-            colour = "${YELLOW}"
-        else:
             colour = "${RED}"
-        BAR = colour + '%3d%% [${BOLD}%s%s${NORMAL}' + colour + ']${NORMAL}\n'
+        else:
+            colour = "${GREEN}"
+
+        BAR = colour + '${BOLD}%3d%%${NORMAL}' + colour + ' [%s%s]${NORMAL}\n'
         self.bar = term.render(BAR)
 
         n = int((width-10)*percent)
-        sys.stdout.write(
-            self.bar % (100*percent, '='*n, '-'*(width-10-n)))
+        sys.stdout.write(self.bar % (100*percent, '='*n, '-'*(width-10-n)))
 
 url = 'https://www.vpac.org/accounts/xmlrpc/'
 silent = False
@@ -368,4 +359,3 @@ if __name__ == "__main__":
             return_value = 1
 
     sys.exit(return_value)
-
