@@ -166,8 +166,39 @@ class TerminalController:
         if s == '$$': return s
         else: return getattr(self, s[2:-1])
 
+class ProgressBar:
+    """
+    A 1-line progress bar, which looks like::
+    
+        20% [===========----------------------------------]
+
+    The progress bar is colored, if the terminal supports color
+    output; and adjusts to half the width of the terminal.
+    """
+        
+    def __init__(self, term, percent):
+        self.term = term
+        if not (self.term.CLEAR_EOL and self.term.UP and self.term.BOL):
+            raise ValueError("Terminal isn't capable enough -- you "
+                             "should use a simpler progress dispaly.")
+        self.width = self.term.COLS / 2 or 75
+        if per < .5:
+            colour = "${GREEN}"
+        elif per < 1:
+            colour = "${YELLOW}"
+        else:
+            colour = "${RED}"
+        BAR = '%3d%% ' + colour + '[${BOLD}%s%s${NORMAL}' + colour + ']${NORMAL}\n'
+        self.bar = term.render(BAR)
+        n = int((self.width-10)*percent)
+        sys.stdout.write(
+            self.term.BOL + self.term.UP + self.term.CLEAR_EOL +
+            (self.bar % (100*percent, '='*n, '-'*(self.width-10-n))) +
+            self.term.CLEAR_EOL)
+
 url = 'https://www.vpac.org/accounts/xmlrpc/'
 silent = False
+progressbar = False
 
 def showquota():
     server = xmlrpclib.Server(url)
@@ -185,11 +216,14 @@ def showquota():
         sys.exit(-1)
 
 if __name__ == "__main__":
-    opts, args = getopt.getopt(sys.argv[1:], 'sh')
+    opts, args = getopt.getopt(sys.argv[1:], 'shp')
     opts = dict(opts)
 
     if '-s' in opts:
         silent = True
+
+    if '-p' in opts:
+        progressbar = True
 
     if '-h' in opts:
         print "usage: showquota [-s] [-h]"
@@ -204,6 +238,9 @@ if __name__ == "__main__":
     return_value = 0
     default_over_quota = False
     nondefault_under_quota = False
+
+    total_actual = 0
+    total_quota = 0
 
     for quota_line in quota_list:
         project = quota_line[0]
@@ -224,6 +261,9 @@ if __name__ == "__main__":
         actual = float(quota_line[1])
         quota = float(quota_line[2])
         default = quota_line[3]
+
+        total_actual += actual
+        total_quota += quota
 
         if actual > quota:
             colour = "${RED}"
@@ -260,8 +300,17 @@ if __name__ == "__main__":
 
         line += "${NORMAL}"
 
-        if silent == False:
+        if not silent:
             print term.render(line)
+
+    if not silent:
+        print "For information about your quotas, please see http://vpac.org/quota"
+
+    if progressbar and not silent:
+        per = total_actual / total_quota
+        if per > 1:
+            per = 1
+        progress = ProgressBar(term, per)
 
     if not default_over_quota:
         return_value = 0
