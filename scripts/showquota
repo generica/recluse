@@ -176,48 +176,61 @@ class ProgressBar:
     output; and adjusts to half the width of the terminal.
     """
         
-    def __init__(self, term, percent):
+    def __init__(self, term, percent, width):
         self.term = term
         if not (self.term.CLEAR_EOL and self.term.UP and self.term.BOL):
             raise ValueError("Terminal isn't capable enough -- you "
                              "should use a simpler progress dispaly.")
-        self.width = self.term.COLS / 2 or 75
-        if per < .5:
+#        self.width = self.term.COLS / 2 or 75
+
+        if percent > 1:
+            percent = 1
+
+        if percent < .5:
             colour = "${GREEN}"
-        elif per < 1:
+        elif percent < 1:
             colour = "${YELLOW}"
         else:
             colour = "${RED}"
-        BAR = '%3d%% ' + colour + '[${BOLD}%s%s${NORMAL}' + colour + ']${NORMAL}\n'
+        BAR = colour + '%3d%% [${BOLD}%s%s${NORMAL}' + colour + ']${NORMAL}\n'
         self.bar = term.render(BAR)
-        n = int((self.width-10)*percent)
+
+        n = int((width-10)*percent)
         sys.stdout.write(
-            self.term.BOL + self.term.UP + self.term.CLEAR_EOL +
-            (self.bar % (100*percent, '='*n, '-'*(self.width-10-n))) +
-            self.term.CLEAR_EOL)
+            self.bar % (100*percent, '='*n, '-'*(width-10-n)))
 
 url = 'https://www.vpac.org/accounts/xmlrpc/'
 silent = False
 progressbar = False
+check_user = ""
 
-def showquota():
+username = pwd.getpwuid(os.getuid()) [0]
+
+def showquota(username):
     server = xmlrpclib.Server(url)
-    username = pwd.getpwuid(os.getuid()) [0]
 
     try:
         return_value, data = server.showquota(username)
-	if return_value < 0:
-            print >> sys.stderr, "ERROR: " + data
-            sys.exit(-1)
-
-        return data
     except:
         print >> sys.stderr, "ERROR: Can't contact the vpac.org accounts system.  Sorry, but quotas cannot be looked up at present.\nPlease try again later"
         sys.exit(-1)
 
+    if return_value < 0:
+        print >> sys.stderr, "ERROR: " + data
+        sys.exit(-1)
+
+    return data
+
+
 if __name__ == "__main__":
-    opts, args = getopt.getopt(sys.argv[1:], 'shp')
+    if username == "root":
+        opts, args = getopt.getopt(sys.argv[1:], 'shpu:')
+    else:
+        opts, args = getopt.getopt(sys.argv[1:], 'shp')
     opts = dict(opts)
+
+    if '-u' in opts:
+        check_user = opts['-u']
 
     if '-s' in opts:
         silent = True
@@ -226,14 +239,35 @@ if __name__ == "__main__":
         progressbar = True
 
     if '-h' in opts:
-        print "usage: showquota [-s] [-h]"
+        if username == "root":
+            print "usage: showquota [-s] [-h] [-p] [-u USERNAME]"
+            print "\n\t-s\tsilent output"
+            print "\t-h\tshow help message"
+            print "\t-p\tshow progress bar"
+            print "\t-u\tshow usage for USERNAME"
+        else:
+            print "usage: showquota [-s] [-h] [-p]"
+            print "\n\t-s\tsilent output"
+            print "\t-h\tshow help message"
+            print "\t-p\tshow progress bar"
         sys.exit(-1)
 
-    quota_list = showquota()
+    if username == "root":
+        if check_user:
+            quota_list = showquota(check_user)
+        else:
+            print "You are running this as root.  Please supply a username with -u USERNAME"
+            sys.exit(-1)
+    else:
+        quota_list = showquota(username)
 
     proj_max_chars = 0
     actual_max_chars = 0
     quota_max_chars = 0
+
+    max_chars = 0
+
+    total_projects = 0
 
     return_value = 0
     default_over_quota = False
@@ -243,6 +277,8 @@ if __name__ == "__main__":
     total_quota = 0
 
     for quota_line in quota_list:
+        total_projects += 1
+
         project = quota_line[0]
         actual = quota_line[1]
         quota = quota_line[2]
@@ -253,6 +289,10 @@ if __name__ == "__main__":
             actual_max_chars = len(actual)
         if len(quota) > quota_max_chars:
             quota_max_chars = len(quota)
+
+        max = proj_max_chars + actual_max_chars + quota_max_chars + 31
+        if max > max_chars:
+            max_chars = max
 
     term = TerminalController()
 
@@ -302,15 +342,22 @@ if __name__ == "__main__":
 
         if not silent:
             print term.render(line)
+            if progressbar:
+                progress = ProgressBar(term, actual/quota, max)
 
-    if not silent:
-        print "For information about your quotas, please see http://vpac.org/quota"
-
-    if progressbar and not silent:
+    if progressbar and not silent and total_projects > 1:
         per = total_actual / total_quota
         if per > 1:
             per = 1
-        progress = ProgressBar(term, per)
+        if total_actual >= total_quota:
+            colour = "${RED}"
+        else:
+            colour = "${GREEN}"
+        print term.render(colour + "Total quotas:${NORMAL}")
+        progress = ProgressBar(term, per, max)
+
+    if not silent:
+        print "For information about your quotas, please see http://vpac.org/quota"
 
     if not default_over_quota:
         return_value = 0
