@@ -33,6 +33,11 @@ shift $(($OPTIND - 1))
 
 for pid in $(ps --no-headers ax -o pid,user:20,cputime,etime,pmem,pcpu,cmd | grep -v [0-9]" root\| rpc \|dbus \| ntp\| ganglia \| smmsp \| xfs \|haldaemon" | awk '{if ($5 > 12) { print $1 }}')
 do
+	if [ ! -f /proc/$pid/cpuset ]
+	then
+		# need this for job id detection
+		continue
+	fi
 	user=$(ps --no-headers ax -o pid,user:20 | awk -v pid=$pid '{ if ($1 == pid) { print $2 } }')
 	job=$(cat /proc/$pid/cpuset | sed 's#/torque/\([0-9]*\)\..*#\1#')
 	mem_percent=$(ps --no-headers ax -o pid,pmem | awk -v pid=$pid '{  if ($1 == pid) { print $2 } }')
