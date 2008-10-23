@@ -1,5 +1,7 @@
 #!/bin/bash
 
+PATH=/usr/local/recluse/scripts:$PATH
+
 immediate=0
 
 if [ $# -eq 1 ]
