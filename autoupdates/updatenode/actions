@@ -1,3 +1,4 @@
 #!/bin/bash
 
-/usr/local/recluse/scripts/updatenode
+# this can be too noisy for us
+/usr/local/recluse/scripts/updatenode -s
