@@ -2,4 +2,4 @@
 
 source /usr/local/recluse/config
 
-rpm -Uvh /usr/local/recluse/centos/$centosversion/ofed/latest/*.rpm > /usr/local/recluse/nodestatus/ofed/$HOSTNAME-ofed 2>&1
+rpm -Uvh /usr/local/recluse/centos/$centosversion/ofed/latest/*.rpm

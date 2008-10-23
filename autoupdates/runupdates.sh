@@ -17,5 +17,5 @@ fi
 
 for dir in $(find /usr/local/recluse/autoupdates/ -mindepth 1 -maxdepth 1 -type d ! -name .svn)
 do
-	$dir/conditions && $dir/actions
+	$dir/conditions && $dir/actions >> /usr/local/recluse/nodestatus/autoupdates/$HOSTNAME 2>&1
 done
