@@ -1,0 +1,10 @@
+#!/bin/bash
+
+source /usr/local/recluse/config
+
+rpm -Uvh /usr/local/recluse/centos/$centosversion/ofed/opensm-latest/*.rpm > /usr/local/recluse/nodestatus/ofed/$HOSTNAME-opensm 2>&1
+
+chkconfig --add opensmd
+chkconfig --level 345 opensmd on
+
+/etc/init.d/opensmd start

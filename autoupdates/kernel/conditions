@@ -1,0 +1,14 @@
+#!/bin/bash
+
+source /usr/local/recluse/config
+
+mostrecent=$(basename /usr/local/recluse/centos/$centosversion/kernel/latest/*.rpm  | awk -F\- '{print $2}')
+
+installed=$(rpm -q "kernel-$mostrecent")
+
+if [ $? -eq 0 ]
+then
+	exit 1
+fi
+
+exit 0

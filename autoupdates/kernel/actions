@@ -1,0 +1,5 @@
+#!/bin/bash
+
+source /usr/local/recluse/config
+
+rpm -ivh /usr/local/recluse/centos/$centosversion/kernel/latest/*.rpm

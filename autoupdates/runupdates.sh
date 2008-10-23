@@ -15,7 +15,7 @@ then
 	sleep $(( $RANDOM % 900 ))
 fi
 
-for dir in $(find -mindepth 1 -maxdepth 1 -type d)
+for dir in $(find /usr/local/recluse/autoupdates/ -mindepth 1 -maxdepth 1 -type d ! -name .svn)
 do
 	$dir/conditions && $dir/actions
 done
