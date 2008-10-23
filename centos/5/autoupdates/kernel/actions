@@ -1,0 +1,3 @@
+#!/bin/bash
+
+rpm -ivh /usr/local/recluse/centos/5/kernel/latest/*.rpm

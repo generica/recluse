@@ -1,0 +1,13 @@
+#!/bin/bash
+
+ofedver=$(basename /usr/local/recluse/centos/5/ofed/latest/mstflint-*.rpm | sed 's/.*\(ofed.*\).x86_64.rpm/\1/')
+
+installed=$(rpm -q libibcommon | grep -q "$ofedver")
+
+if [ $? -eq 1 ]
+then
+	/usr/local/recluse/scripts/canupdateinfiniband -s
+	exit $?
+fi
+
+exit 1
