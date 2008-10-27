@@ -45,10 +45,10 @@ fi
 if [ -e /etc/authuser ]
 then
 	removelist="/etc/authuser"
-	savelist=""
+	movelist=""
 else
 	removelist=""
-	savelist=""
+	movelist=""
 fi
 
 for file in $(find /usr/spool/PBS/aux/ -type f)
@@ -63,24 +63,22 @@ done
 
 for file in $(find /usr/spool/PBS/spool/ -type f)
 do
-	removelist="$removelist $file"
 	rcp=$(echo $file | grep -c "rcperr")
 	if [ $rcp -eq 0 ]
 	then
-		savelist="$savelist $file"
+		movelist="$movelist $file"
 	fi
 done
 
 for file in $(find /usr/spool/PBS/undelivered/ -type f)
 do
-	removelist="$removelist $file"
-	savelist="$savelist $file"
+	movelist="$movelist $file"
 done
 
 
 if [ $test -eq 1 ]
 then
-	for file in $(echo $savelist)
+	for file in $(echo $movelist)
 	do
 		owner=$(stat -c %U $file)
 		if [ "$owner" == "UNKNOWN" ]
@@ -93,15 +91,14 @@ then
 			echo "mkdir $dir/undelivered_output"
 			echo "chown $owner $dir/undelivered_output"
 		fi
-		echo "cp $file $dir/undelivered_output"
-		echo "chown $owner $dir/undelivered_output/$(basename $file)"
+		echo "mv $file $dir/undelivered_output"
 	done
 	for file in $(echo $removelist)
 	do
 		echo "rm -f $file"
 	done
 else
-	for file in $(echo $savelist)
+	for file in $(echo $movelist)
 	do
 		owner=$(stat -c %U $file)
 		if [ "$owner" == "UNKNOWN" ]
@@ -112,10 +109,14 @@ else
 		if [ ! -d $dir/undelivered_output ]
 		then
 			mkdir -v $dir/undelivered_output
+			if [ $? -ne 0 ]
+			then
+				echo "ERROR: could not mkdir, leaving file $file"
+				continue
+			fi
 			chown -v $owner $dir/undelivered_output
 		fi
-		cp -v $file $dir/undelivered_output
-		chown -v $owner $dir/undelivered_output/$(basename $file)
+		mv -v $file $dir/undelivered_output
 	done
 	for file in $(echo $removelist)
 	do

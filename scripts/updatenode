@@ -49,6 +49,12 @@ then
 elif [ x"$1" == x"head" ]
 then
 	mode=head
+elif [ x"$NODE" == "xcompute" ]
+then
+	mode=compute
+elif [ x"$NODE" == "xhead" ]
+then
+	mode=head
 elif [ "$hostname" == "$cluster" ]
 then
 	mode=head
