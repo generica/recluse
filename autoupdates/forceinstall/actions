@@ -1,0 +1,16 @@
+#!/bin/bash
+
+source /usr/local/recluse/config
+
+hostname=$(hostname | sed -e 's/\..*//')
+
+if [ "$hostname" == "$cluster" ]
+then
+        list=$(eval echo /usr/local/recluse/centos/$centosversion/forceinstall/*.rpm /usr/local/recluse/centos/$centosversion/forceinstall.head/*.rpm)
+else
+        list=$(eval echo /usr/local/recluse/centos/$centosversion/forceinstall/*.rpm)
+fi
+
+installed=$(rpm -ivh $list)
+
+exit $?
