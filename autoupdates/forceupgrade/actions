@@ -11,6 +11,6 @@ else
         list=$(eval echo /usr/local/recluse/centos/$centosversion/forceupgrade/*.rpm)
 fi
 
-upgraded=$(rpm -Uvh $list)
+rpm -Uvh $list
 
 exit $?

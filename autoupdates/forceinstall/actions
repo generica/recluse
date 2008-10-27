@@ -11,6 +11,6 @@ else
         list=$(eval echo /usr/local/recluse/centos/$centosversion/forceinstall/*.rpm)
 fi
 
-installed=$(rpm -ivh $list)
+rpm -ivh $list
 
 exit $?
