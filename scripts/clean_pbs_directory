@@ -62,7 +62,7 @@ else
 	running_job_list=""
 fi
 
-for file in $(find /usr/spool/PBS/aux/ -type f)
+for file in $(find /usr/spool/PBS/aux/ -type f -mmin +5)
 do
 	running=$(echo $running_job_list | grep -c $(basename $file))
 	if [ $running -eq 0 ]
@@ -72,7 +72,7 @@ do
 	fi
 done
 
-for file in $(find /usr/spool/PBS/mom_priv/jobs/ -type f)
+for file in $(find /usr/spool/PBS/mom_priv/jobs/ -type f -mmin +5)
 do
 	running=$(echo $running_job_list | grep -c $(basename $file | sed 's/.[A-Z][A-Z]$//'))
 	if [ $running -eq 0 ]
@@ -82,7 +82,7 @@ do
 	fi
 done
 
-for file in $(find /usr/spool/PBS/spool/ -type f)
+for file in $(find /usr/spool/PBS/spool/ -type f -mmin +5)
 do
 	rcp=$(echo $file | grep -c "rcperr")
 	if [ $rcp -eq 0 ]
