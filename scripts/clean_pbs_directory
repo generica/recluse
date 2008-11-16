@@ -20,6 +20,7 @@
 
 test=0
 running=0
+will_delete=0
 hostname=$(hostname | sed -e 's/\..*//')
 cluster=$(echo $hostname | sed -e 's/[0-9][0-9][0-9]//' -e 's/-m$//')
 
@@ -57,7 +58,6 @@ fi
 if [ $running -eq 1 ]
 then
 	running_job_list=$(/usr/local/sbin/momctl -d0 | awk '/^job/{print $1}' | sed 's/job\[\(.*\)\]/\1/')
-#	echo "running job list: $running_job_list"
 else
 	running_job_list=""
 fi
@@ -69,6 +69,7 @@ do
 	then
 		echo "$file is not in running job list, removing"
 		removelist="$removelist $file"
+		will_delete=1
 	fi
 done
 
@@ -79,6 +80,7 @@ do
 	then
 		echo "$file is not in running job list, removing"
 		removelist="$removelist $file"
+		will_delete=1
 	fi
 done
 
@@ -92,6 +94,7 @@ do
 		then
 			echo "$file is not in running job list, removing"
 			movelist="$movelist $file"
+			will_delete=1
 		fi
 	fi
 done
@@ -149,4 +152,8 @@ else
 	do
 		rm -fv $file
 	done
+	if [ $will_delete -eq 1 ]
+	then
+		echo -e "running job list was: \n$running_job_list"
+	fi
 fi

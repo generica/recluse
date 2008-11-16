@@ -40,6 +40,12 @@ do
 	fi
 	user=$(ps --no-headers ax -o pid,user:20 | awk -v pid=$pid '{ if ($1 == pid) { print $2 } }')
 	job=$(cat /proc/$pid/cpuset | sed 's#/torque/\([0-9]*\)\..*#\1#')
+	isjob=$(echo $job | egrep -c "[0-9]")
+	if [ $isjob -eq 0 ]
+	then
+		# part of a cpuset, but no job id
+		continue
+	fi
 	mem_percent=$(ps --no-headers ax -o pid,pmem | awk -v pid=$pid '{  if ($1 == pid) { print $2 } }')
 	mem_total=$(free | awk '/^Mem/{print $2}')
 	mem_used=$(echo "scale=0; $mem_total*$mem_percent/100/1024" | bc)
