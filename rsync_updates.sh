@@ -20,20 +20,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-CONFIG=/usr/local/recluse/config
+BASEDIR=/usr/local/recluse
+CONFIG=$BASEDIR/config
 [ -r "$CONFIG" ] || echo "Can't source $CONFIG"
 [ -r "$CONFIG" ] || exit 0
 source $CONFIG
 
-LOGFILE=rsync_updates.sh.log
+LOGFILE=$BASEDIR/rsync_updates.sh.log
 OPTS="-pvrDt --delete"
 
 echo "Started update at" $(date) >> $LOGFILE 2>&1
 logger -t rsync "re-rsyncing the centos core tree"
-rsync ${OPTS} $mirror/centos/$centosversion/os/x86_64/ centos/$centosversion/os  >> $LOGFILE 2>&1
-rsync ${OPTS} $mirror/centos/$centosversion/updates/x86_64/ centos/$centosversion/updates  >> $LOGFILE 2>&1
-rsync ${OPTS} $mirror/centos/$centosversion/addons/x86_64/ centos/$centosversion/addons >> $LOGFILE 2>&1
-rsync ${OPTS} $mirror/centos/$centosversion/extras/x86_64/ centos/$centosversion/extras >> $LOGFILE 2>&1
-rsync ${OPTS} $mirror/centos/$centosversion/centosplus/x86_64/ centos/$centosversion/centosplus >> $LOGFILE 2>&1
+rsync ${OPTS} $mirror/centos/$centosversion/os/x86_64/ $BASEDIR/centos/$centosversion/os  >> $LOGFILE 2>&1
+rsync ${OPTS} $mirror/centos/$centosversion/updates/x86_64/ $BASEDIR/centos/$centosversion/updates  >> $LOGFILE 2>&1
+rsync ${OPTS} $mirror/centos/$centosversion/addons/x86_64/ $BASEDIR/centos/$centosversion/addons >> $LOGFILE 2>&1
+rsync ${OPTS} $mirror/centos/$centosversion/extras/x86_64/ $BASEDIR/centos/$centosversion/extras >> $LOGFILE 2>&1
+rsync ${OPTS} $mirror/centos/$centosversion/centosplus/x86_64/ $BASEDIR/centos/$centosversion/centosplus >> $LOGFILE 2>&1
 echo "End: " $(date) >> $LOGFILE 2>&1
 
