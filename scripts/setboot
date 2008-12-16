@@ -21,7 +21,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 dir=/tftpboot/pxelinux.cfg
-versions="$(for file in $dir/install.*; do basename $file; done) localboot memtest"
+versions="$(for file in $dir/install.*; do basename $file; done) localboot memtest breakin"
 
 if [ $# == 2 ]
 then
