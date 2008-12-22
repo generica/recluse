@@ -53,7 +53,7 @@ start() {
 	if [ "$NODETYPE" = "managment" ]
 	then
 		PID=$(pidofproc pbs_server)
-		if [ -z $PID ]
+		if [ -z "$PID" ]
 		then
 			ulimit -n 20480
 			ulimit -c unlimited
@@ -67,7 +67,7 @@ start() {
 	
 	# If to here cannot be managment node so just run pbs_mom.
 	PID=$(pidofproc pbs_mom)
-	if [ -z $PID ]
+	if [ -z "$PID" ]
 	then
 		# the -p says adopt running jobs, a good idea. 
 		pbs_mom -pc /usr/local/etc/pbs_mom.conf
@@ -76,7 +76,7 @@ start() {
 	fi
 
 	PID=$(pidofproc pbs_mom)
-	if [ -z $PID ]
+	if [ -z "$PID" ]
 	then
 		echo "Failed to start pbs_mom on $(hostname)"
 		return 1
@@ -98,7 +98,7 @@ stop() {
 	# If to here, it must be a compute node, deal with mom.
 
 	PID=$(pidofproc pbs_mom)
-	if [ ! -z $PID ]
+	if [ ! -z "$PID" ]
 	then
 		kill -9 $PID
 	else
@@ -111,13 +111,13 @@ restart() {
 	if [ "$NODETYPE" = "managment" ]
 	then
 		PID=$(pidofproc pbs_server)
-		if [ ! -z $PID ]
+		if [ ! -z "$PID" ]
 		then
 			echo "Old Server PID is $PID"
 		fi
 	else
 		PID=$(pidofproc pbs_mom)
-		if [ ! -z $PID ]
+		if [ ! -z "$PID" ]
 		then
 			echo "Old mom PID is $PID"
 		fi
@@ -130,13 +130,13 @@ restart() {
 	if [ "$NODETYPE" = "managment" ]
 	then
 		PID=$(pidofproc pbs_server)
-		if [ ! -z $PID ]
+		if [ ! -z "$PID" ]
 		then
 			echo "New Server PID is $PID"
 		fi
 	else
 		PID=$(pidofproc pbs_mom)
-		if [ ! -z $PID ]
+		if [ ! -z "$PID" ]
 		then
 			echo "New mom PID is $PID"
 		fi
@@ -147,7 +147,7 @@ status() {
 	if [ "$NODETYPE" = "compute" ]
 	then
 		PID=$(pidofproc pbs_mom)
-		if [ -z $PID ]
+		if [ -z "$PID" ]
 		then
 			echo "Error, pbs_mom not running on " $(hostname)
 		else
@@ -155,7 +155,7 @@ status() {
 		fi
 	else
 		PID=$(pidofproc pbs_server)
-		if [ -z $PID ]
+		if [ -z "$PID" ]
 		then
 			echo "Error, pbs_server is not running on " $(hostname)
 		else
