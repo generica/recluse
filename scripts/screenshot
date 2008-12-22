@@ -77,10 +77,13 @@ if __name__ == "__main__":
         slurpp.setopt(pycurl.WRITEFUNCTION, dev_null.write)
         slurpp.setopt(pycurl.COOKIEFILE, '')
         slurpp.setopt(pycurl.URL, LOGIN_URL)
+        slurpp.setopt(pycurl.PROXY, '')
 	try:
 	        slurpp.perform()
-	except:
+	except pycurl.error, e:
 		print 'ERROR: Cannot connect to host: ' + options.hostname
+		print "Error code: ", e[0]
+		print "Error message: ", e[1]
 	        dev_null.close()
 	        slurpp.close()
 		sys.exit(-1)
