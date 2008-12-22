@@ -4,7 +4,7 @@ source /usr/local/recluse/config
 
 ofedver=$(basename /usr/local/recluse/centos/$centosversion/ofed/latest/mstflint-*.rpm | sed 's/.*\(ofed.*\).x86_64.rpm/\1/')
 
-installed=$(rpm -q libibcommon | grep -q "$ofedver")
+installed=$(rpm -q libibcommon | grep -q "$ofedver$")
 
 if [ $? -eq 1 ]
 then

@@ -2,4 +2,4 @@
 
 source /usr/local/recluse/config
 
-rpm -Uvh /usr/local/recluse/centos/$centosversion/ofed/latest/*.rpm
+rpm -Uvh --force /usr/local/recluse/centos/$centosversion/ofed/latest/*.rpm

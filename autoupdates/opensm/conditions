@@ -11,7 +11,7 @@ fi
 
 ofedver=$(basename /usr/local/recluse/centos/$centosversion/ofed/opensm-latest/opensm-libs*.rpm | sed 's/.*\(ofed.*\).x86_64.rpm/\1/')
 
-installed=$(rpm -q opensm-libs | grep -q "$ofedver")
+installed=$(rpm -q opensm-libs | grep -q "$ofedver$")
 
 if [ $? -eq 1 ]
 then

@@ -2,7 +2,7 @@
 
 source /usr/local/recluse/config
 
-rpm -Uvh /usr/local/recluse/centos/$centosversion/ofed/opensm-latest/*.rpm
+rpm -Uvh --force /usr/local/recluse/centos/$centosversion/ofed/opensm-latest/*.rpm
 
 chkconfig --add opensmd
 chkconfig --level 345 opensmd on
