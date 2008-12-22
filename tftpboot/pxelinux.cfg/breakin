@@ -1,0 +1,8 @@
+# Perform an install
+default breakin
+# Don't prompt
+prompt 0
+
+label breakin
+	kernel breakin/vmlinuz
+	append initrd=breakin/initrd.img sshpasswd=breakin startup=breakin
