@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# jobstatus
+#
+# check the status of a job on PBS
+#
+# Written by Brett Pemberton, brett@vpac.org
+# Copyright (C) 2007 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+if [ $# -ne 2 ]
+then
+	echo "usage: $0 <o|e> <job number>"
+	exit
+fi
+
+if [ "$1" == "e" ]
+then
+	oe="ER"
+elif [ "$1" == "o" ]
+then
+	oe="OU"
+else
+	echo "usage: $0 <o|e> <job number>"
+	exit
+fi	
+
+job=$2
+
+checkjob $job >/dev/null 2>&1
+isjob=$?
+
+if [ $isjob -ne 0 ]
+then
+	echo "$job doesn't appear to be a job"
+	exit
+fi
+
+state=$(checkjob $job | awk '/^State/{print $2}')
+
+if [ $state != "Running" ]
+then
+	echo "$job is not yet running"
+	exit
+fi
+
+leadnode=$(checkjob -v $job | grep "Task Distribution" | awk -F, '{print $1}' | awk '{print $3}')
+
+ssh $leadnode "cat /usr/spool/PBS/spool/${job}.*.${oe}"

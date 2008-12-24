@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# setboot
+#
+# set boot image for a node
+#
+# Written by Brett Pemberton, brett@vpac.org
+# Copyright (C) 2006 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+dir=/tftpboot/pxelinux.cfg
+versions="$(for file in $dir/install.*; do basename $file; done) localboot memtest breakin"
+
+if [ $# == 2 ]
+then
+	machine=$1
+	status=$2
+elif [ $# == 1 ]
+then
+	machine=$1
+else
+	echo "$0 <machine> [target]";
+	echo "where target is one of: " $versions;
+	exit
+fi
+
+machine_ip=$(egrep -w "$machine" /etc/hosts | grep -v "${machine}-" | awk '{print $1}')
+hex_machine=$(echo "$machine_ip" | awk -F. '{ for ( i=1; i<=NF; ++i ) printf ("%02x", $i % 256); print "" }' | tr '[a-z]' '[A-Z]')
+
+if [ -z $hex_machine ]
+then
+	echo "ERROR: machine $machine cannot be found in /etc/hosts"
+	exit
+fi
+
+if [ -f $dir/$hex_machine ]
+then
+	status_machine=$(\ls -l $dir/$hex_machine | awk -F" -> " '{print $2}')
+else
+	echo "machine status not set yet"
+fi
+
+if [ ! $status ]
+then
+	echo "$machine -> $status_machine"
+else
+	if [ $status == "localboot" -o -f $dir/$status ]
+	then
+		/bin/rm -f $dir/$hex_machine
+		ln -s $status $dir/$hex_machine
+	else
+		echo "$0 <machine> [target]";
+		echo "where target is one of: " $versions;
+	fi
+fi

@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# update_ssh_keys
+#
+# update ssh keys on a node from master copy
+#
+# Written by Brett Pemberton, brett@vpac.org
+# Copyright (C) 2008 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+ETH_IP=`ifconfig eth0 | grep "inet addr:" | cut -d: -f 2 | cut -d' ' -f 1`
+
+# if they aren't stored, store them
+if [ ! -d /usr/local/recluse/nodestatus/ssh/${ETH_IP}/ -a -e /etc/ssh/ssh_host_dsa_key ]
+then
+	mkdir /usr/local/recluse/nodestatus/ssh/${ETH_IP}/
+	cp -vpf /etc/ssh/*key* /usr/local/recluse/nodestatus/ssh/${ETH_IP}/
+fi
+
+# if they don't exist, and are stored, grab them
+if [ -d /usr/local/recluse/nodestatus/ssh/${ETH_IP}/ -a ! -e /etc/ssh/ssh_host_dsa_key ]
+then
+	cp -vpf /usr/local/recluse/nodestatus/ssh/${ETH_IP}/*key* /etc/ssh/
+fi

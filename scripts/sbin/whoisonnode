@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# whoisonnode
+#
+# query moab to find out who and what is running on a node
+#
+# Written by Brett Pemberton, brett@vpac.org
+# Copyright (C) 2008 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+printemail=0
+
+while getopts ":e" option
+do
+	case $option in
+		e) printemail=1;;
+	esac
+done
+
+shift $(($OPTIND - 1))
+
+if [ $# -eq 0 ]
+then
+	echo "usage: $0 [-e] <node>"
+	exit 1
+fi
+
+node=$1
+
+joblist=$(checknode $node  | awk '/Jobs/{print $2}')
+
+for job in $(echo $joblist | tr ',' '\n')
+do
+	user=$(checkjob $job | awk -F: '/user/{print $3}' | awk '{print $1}');
+	duration=$(checkjob $job | awk '/Duration/{print $3 " " $4 " " $5 " " $6 " " $7 " " $8}');
+	email=$(cat /home/$user/.forward | grep @)
+	if [ $printemail -eq 1 ]
+	then
+		echo "job: $job - $user - $email"
+	else
+		echo "job: $job - $user - $duration"
+	fi
+done

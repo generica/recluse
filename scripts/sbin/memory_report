@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# memory_report
+#
+# check if any process is using more than its share of memory
+#
+# Written by Brett Pemberton, brett@vpac.org
+# Copyright (C) 2008 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+verbose=0
+
+while getopts ":v" option
+do
+	case $option in
+		v) verbose=1;;
+	esac
+done
+
+shift $(($OPTIND - 1))
+
+cpu_count=$(grep -c ^processor /proc/cpuinfo)
+percent_allowed=$[100/cpu_count]
+
+for pid in $(ps --no-headers ax -o pid,user:20,cputime,etime,pmem,pcpu,cmd | grep -v [0-9]" root\| rpc \|dbus \| ntp\| ganglia \| smmsp \| xfs \|haldaemon" | awk -v per=$percent_allowed '{if ($5 > per) { print $1 }}')
+do
+	user=$(ps --no-headers ax -o pid,user:20 | awk -v pid=$pid '{ if ($1 == pid) { print $2 } }')
+	mem_percent=$(ps --no-headers ax -o pid,pmem | awk -v pid=$pid '{  if ($1 == pid) { print $2 } }')
+	mem_total=$(free | awk '/^Mem/{print $2}')
+	mem_used=$(echo "scale=0; $mem_total*$mem_percent/100/1024" | bc)
+	if [ ! -f /proc/$pid/cpuset ]
+	then
+		echo -e "POSSIBLY BAD: pid: $pid\t; user: $user\t; job: UNKNOWN\t; mem: $mem_percent ; mem_requested (mb): UNKNOWN ; mem_used (mb): ${mem_used}"
+		# need this for job id detection
+		continue
+	fi
+	job=$(cat /proc/$pid/cpuset | sed 's#/torque/\([0-9]*\)\..*#\1#')
+	isjob=$(echo $job | egrep -c "[0-9]")
+	if [ $isjob -eq 0 ]
+	then
+		# part of a cpuset, but no job id
+		continue
+	fi
+	mem_requested_per_core=$(qstat -f $job | awk '/Resource_List.pmem/{print $3}')
+	mb_count=$(echo $mem_requested_per_core | egrep -c "[0-9]*mb")
+	cores=$(qstat -f $job | grep Resource_List.nodes | awk -Fppn= '{print $2}')
+	if [ -z $cores ]
+	then
+		cores=1
+	fi
+	if [ $mb_count -eq 1 ]
+	then
+		mem_requested_mb=$(echo $mem_requested_per_core | sed 's/mb$//')
+	else
+		mem_requested_mb=$(echo $(echo $mem_requested_per_core | sed 's/gb$//') " * 1024" | bc)
+	fi
+	mem_requested=$(echo "$mem_requested_mb * $cores" | bc)
+
+	if [ $mem_requested -lt $mem_used ]
+	then
+		diff=$(echo $mem_used " - " $mem_requested | bc)
+		if [ $verbose -eq 1 -o $diff -gt 512 ]
+		then
+			echo -e "BAD: pid: $pid\t; user: $user\t; job: $job\t; mem: $mem_percent ; mem_requested (mb): $mem_requested ; mem_used (mb): ${mem_used}"
+		fi
+	else
+		if [ $verbose -eq 1 ]
+		then
+			echo -e "OK : pid: $pid\t; user: $user\t; job: $job\t; mem: $mem_percent ; mem_requested (mb): $mem_requested ; mem_used (mb): ${mem_used}"
+		fi
+	fi
+
+done

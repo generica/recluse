@@ -1,0 +1,113 @@
+#! /usr/bin/env python
+
+# screenshot
+#
+# grab a screenshot from an ipmi adaptor
+#
+# Written by Brett Pemberton, brett@vpac.org
+# Copyright (C) 2008 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import pycurl, StringIO, sys, os.path
+from optparse import OptionParser
+
+# Constants
+USER_AGENT = 'Mozilla/4.0 (compatible; MSIE 6.0)'
+LOGIN_POST_DATA = 'login=ADMIN&password=ADMIN&action_login=Login'
+HOME2_POST_DATA = 'action_preview_refresh=Refresh'
+FILE_MODE = 'wb'
+
+if __name__ == "__main__":
+
+        # Set up objects
+        dev_null = StringIO.StringIO()
+        slurpp = pycurl.Curl()
+
+        filename="default.jpg"
+        hostname=""
+
+        usage = "usage: %prog [options] arg"
+        parser = OptionParser(usage)
+
+        parser.add_option("-f", "--file", dest="filename",
+                help="write screenshot to FILE", metavar="FILE")
+        parser.add_option("-n", "--node", dest="hostname",
+                help="node to poll", type="string")
+
+        (options, args) = parser.parse_args()
+
+        if options.filename:
+                filename = options.filename
+        if options.hostname:
+                LOGIN_URL = 'http://' + options.hostname + '-m/auth.asp'
+		HOME2_URL = 'http://' + options.hostname + '-m/home2.asp'
+                DOWNLOAD_URL = 'http://' + options.hostname + '-m/screenshot.jpg'
+                DOWNLOAD_REFERER = 'http://' + options.hostname + '-m/home.asp'
+                if not options.filename:
+                        filename = options.hostname + '.jpg'
+        else:
+                parser.error("node required")
+
+        if os.path.exists(filename):
+                i = 1
+                newfilename = filename[0:len(filename)-4] + '-' + str(i) + '.jpg'
+                while os.path.exists(newfilename):
+                        i += 1
+                        newfilename = filename[0:len(filename)-4] + '-' + str(i) + '.jpg'
+                print 'WARNING: ' + filename + ' exists, using ' + newfilename + ' instead'
+                filename = newfilename
+        else:
+                print 'writing to ' + filename
+
+        # Request login page
+        slurpp.setopt(pycurl.USERAGENT, USER_AGENT)
+        slurpp.setopt(pycurl.FOLLOWLOCATION, 1)
+        slurpp.setopt(pycurl.WRITEFUNCTION, dev_null.write)
+        slurpp.setopt(pycurl.COOKIEFILE, '')
+        slurpp.setopt(pycurl.URL, LOGIN_URL)
+        slurpp.setopt(pycurl.PROXY, '')
+	try:
+	        slurpp.perform()
+	except pycurl.error, e:
+		print 'ERROR: Cannot connect to host: ' + options.hostname
+		print "Error code: ", e[0]
+		print "Error message: ", e[1]
+	        dev_null.close()
+	        slurpp.close()
+		sys.exit(-1)
+
+        # Log in to site
+        slurpp.setopt(pycurl.POSTFIELDS, LOGIN_POST_DATA)
+        slurpp.setopt(pycurl.POST, 1)
+        slurpp.perform()
+
+	# Go to home2, request refresh
+	slurpp.setopt(pycurl.URL, HOME2_URL)
+	slurpp.setopt(pycurl.POSTFIELDS, HOME2_POST_DATA)
+	slurpp.setopt(pycurl.POST, 1)
+	slurpp.perform()
+
+        # Download relevant data
+        slurpp.setopt(pycurl.HTTPGET, 1)
+        slurpp.setopt(pycurl.URL, DOWNLOAD_URL)
+        slurpp.setopt(pycurl.REFERER, DOWNLOAD_REFERER)
+        outfile = file(filename, FILE_MODE)
+        slurpp.setopt(pycurl.WRITEFUNCTION, outfile.write)
+        slurpp.perform()
+
+        # Clean up and close out
+        outfile.close()
+        dev_null.close()
+        slurpp.close()

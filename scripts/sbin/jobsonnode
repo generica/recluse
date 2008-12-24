@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# jobsonnode
+#
+# query pbs to find what jobs are running on a node
+#
+# Written by Chris Samuel <csamuel@vpac.org>
+# Copyright (C) 2006 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+usage="usage: $0 [-v] [-u] [-h] <node name>"
+
+if [ $# == 0 ]
+then
+	echo $usage
+	exit
+fi
+
+FS='[ .]+'
+printme='{print $1}'
+
+while getopts "vuh" options; do
+  case $options in
+    u ) printme='{print $1 , $4}';;
+    v ) printme='{print $0}';;
+    h ) echo $usage
+	 exit 1;;
+    \? ) echo $usage
+         exit 1;;
+    * ) echo $usage
+         exit 1;;
+  esac
+done
+
+shift $(($OPTIND - 1))
+
+node=$1
+
+qstat -n -1 | awk "BEGIN { FS=\"$FS\" } /$node/ {$printme}"
