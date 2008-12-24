@@ -25,6 +25,11 @@
 #  - currently running
 #  - original centos kernel
 
+CONFIG=/usr/local/recluse/config
+[ -r "$CONFIG" ] || echo "Can't source $CONFIG"
+[ -r "$CONFIG" ] || exit 0
+source $CONFIG
+
 test=0
 
 if [ $# -ne 0 ]
@@ -35,7 +40,7 @@ then
 	fi
 fi
 
-mostrecent=$( basename /usr/local/recluse/centos/5/kernel/latest/*.rpm  | awk -F\- '{print $2}')
+mostrecent=$(basename /usr/local/recluse/centos/$centosversion/kernel/latest/*.rpm  | awk -F\- '{print $2}')
 running=$(uname -r | sed 's/-rc9/rc9/')
 
 for kernel in $(rpm -qa kernel | grep -v "$running-" | grep -v $mostrecent | grep -v ".el5")
