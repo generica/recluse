@@ -49,4 +49,4 @@ else
 	node_mgt=${node}
 fi
 
-ipmitool -U $ipmi_user -f /etc/ipmi_pass -H $node_mgt sel $op
+ipmitool -U $ipmi_user -f /etc/ipmi_pass -H $node_mgt sel $op $3 $4 $5 $6
