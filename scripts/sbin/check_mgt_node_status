@@ -75,3 +75,11 @@ elif [ $verbose -eq 1 ]
 then
 	echo "OK: tftpboot link is set up"
 fi
+
+if [ ! -r /etc/ipmi_pass ]
+then
+	echo "ERROR: ipmi password file not set up"
+elif [ $verbose -eq 1 ]
+then
+	echo "OK: ipmi password file is set up"
+fi
