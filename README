@@ -47,7 +47,7 @@ ERROR: tftpd is not enabled
 SOLUTION: enable tftpd in /etc/xinetd.d/tftpd
 
 ERROR: tftpboot link not set up
-SOLUTION: rm -f /tftpboot; ln -s /usr/local/recluse/tftpboot /tftpboot
+SOLUTION: rm -rf /tftpboot; ln -s /usr/local/recluse/tftpboot /tftpboot
 
 ERROR: ipmi password file not set up
 SOLUTION: add IPMI admin user password to /etc/ipmi_pass
