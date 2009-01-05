@@ -85,8 +85,8 @@ then
 	echo "OK: /usr/local is exported"
 fi
 
-tftp_status=$(grep disable /etc/xinetd.d/tftp | awk '{print $3}' 2>&1)
-if [ "tftp_status" == "yes" ]
+tftp_status=$(grep disable /etc/xinetd.d/tftp 2>&1 | awk '{print $3}')
+if [ "$tftp_status" == "yes" ]
 then
 	echo "ERROR: tftpd is disabled in xinetd config"
 elif [ $verbose -eq 1 ]
