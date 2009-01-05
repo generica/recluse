@@ -70,7 +70,13 @@ check_pidof nfsd nfsd
 check_pidof dhcpd dhcpd
 check_pidof httpd httpd
 
-usr_local=$(exportfs -v | grep -c /usr/local)
+if [ -x /usr/sbin/exportfs ]
+then
+	usr_local=$(exportfs -v | grep -c /usr/local)
+else
+	usr_local=1
+fi
+
 if [ $usr_local -eq 0 ]
 then
 	echo "ERROR: /usr/local is not exported"
