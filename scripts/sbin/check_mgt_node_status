@@ -48,7 +48,7 @@ function check_pidof {
 	prog=$1
 	alias=$2
 
-	pid=$(pidof $prog)
+	pid=$(/sbin/pidof $prog)
 	if [ -z "$pid" ]
 	then
 		echo "ERROR: $alias is not running"
@@ -63,6 +63,7 @@ check_rpm tftp-server
 check_rpm OpenIPMI-tools
 check_rpm dhcp 
 check_rpm httpd
+check_rpm nfs-utils
 
 check_pidof xinetd xinetd
 check_pidof nfsd nfsd
@@ -78,7 +79,7 @@ then
 	echo "OK: /usr/local is exported"
 fi
 
-tftp_status=$(grep disable /etc/xinetd.d/tftp  | awk '{print $3}')
+tftp_status=$(grep disable /etc/xinetd.d/tftp | awk '{print $3}' 2>&1)
 if [ "tftp_status" == "yes" ]
 then
 	echo "ERROR: tftpd is disabled in xinetd config"
@@ -87,7 +88,7 @@ then
         echo "OK: tftpd is enabled"
 fi
 
-stat /tftpboot/pxelinux.cfg/install.* >/dev/null
+stat /tftpboot/pxelinux.cfg/install.* >/dev/null 2>&1
 if [ $? -ne 0 ]
 then
 	echo "ERROR: tftpboot link not set up"
