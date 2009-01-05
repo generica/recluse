@@ -17,6 +17,21 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ----------------------------------------------------------------------
 
-Insert instructions here
+Install Instructions:
+
+1) Install CentOS on management node
+2) Check out recluse to /usr/local/recluse
+	svn co https://svn.vpac.org/recluse/trunk /usr/local/recluse
+3) Check out kernel svn to /usr/local/recluse/centos/5/kernel
+	svn co https://svn.vpac.org/recluse-kernel-supermicro/trunk /usr/local/recluse/centos/5/kernel
+or
+	svn co https://svn.vpac.org/recluse-kernel-generic/trunk /usr/local/recluse/centos/5/kernel
+4) Create a config from config.example
+5) Sync CentOS tree
+	bash /usr/local/recluse/rsync_updates.sh
+6) Set this up for nightly syncs
+	ln -s /usr/local/recluse/rsync_updates.sh /etc/cron.daily/rsync_updates.sh
+7) Check setup:
+	bash /usr/local/recluse/scripts/sbin/check_mgt_node_status
 
 ----------------------------------------------------------------------
