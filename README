@@ -34,4 +34,22 @@ or
 7) Check setup:
 	bash /usr/local/recluse/scripts/sbin/check_mgt_node_status
 
+ERROR: xxx is installed
+SOLUTION: Install RPMS the script says are missing, using yum
+
+ERROR: xxx is not running
+SOLUTION: /etc/init.d/xxx start; chkconfig --level 3 xxx on
+
+ERROR: /usr/local is not exported
+SOLUTION: create an /etc/exports entry for /usr/local
+
+ERROR: tftpd is not enabled
+SOLUTION: enable tftpd in /etc/xinetd.d/tftpd
+
+ERROR: tftpboot link not set up
+SOLUTION: rm -f /tftpboot; ln -s /usr/local/recluse/tftpboot /tftpboot
+
+ERROR: ipmi password file not set up
+SOLUTION: add IPMI admin user password to /etc/ipmi_pass
+
 ----------------------------------------------------------------------
