@@ -60,6 +60,9 @@ function check_pidof {
 }
 
 check_rpm tftp-server
+check_rpm OpenIPMI-tools
+check_rpm dhcp 
+check_rpm httpd
 
 check_pidof xinetd xinetd
 check_pidof nfsd nfsd
