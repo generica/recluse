@@ -28,6 +28,21 @@ then
 	verbose=1
 fi
 
+function check_rpm {
+
+	rpm=$1
+
+	check=$(rpm -q $rpm >/dev/null 2>&1)
+	if [ $? -ne 0 ]
+	then
+		echo "ERROR: $rpm is not installed"
+	elif [ $verbose -eq 1 ]
+	then
+		echo "OK: $rpm is installed"
+	fi
+
+}
+
 function check_pidof {
 
 	prog=$1
@@ -43,6 +58,8 @@ function check_pidof {
 	fi
 
 }
+
+check_rpm tftp-server
 
 check_pidof xinetd xinetd
 check_pidof nfsd nfsd
