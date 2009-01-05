@@ -44,7 +44,7 @@ function check_pidof {
 
 }
 
-check_pidof in.tftpd tftpd
+check_pidof xinetd xinetd
 check_pidof nfsd nfsd
 check_pidof dhcpd dhcpd
 check_pidof httpd httpd
@@ -56,4 +56,22 @@ then
 elif [ $verbose -eq 1 ]
 then
 	echo "OK: /usr/local is exported"
+fi
+
+tftp_status=$(grep disable /etc/xinetd.d/tftp  | awk '{print $3}')
+if [ "tftp_status" == "yes" ]
+then
+	echo "ERROR: tftpd is disabled in xinetd config"
+elif [ $verbose -eq 1 ]
+then
+        echo "OK: tftpd is enabled"
+fi
+
+stat /tftpboot/pxelinux.cfg/install.* >/dev/null
+if [ $? -ne 0 ]
+then
+	echo "ERROR: tftpboot link not set up"
+elif [ $verbose -eq 1 ]
+then
+	echo "OK: tftpboot link is set up"
 fi
