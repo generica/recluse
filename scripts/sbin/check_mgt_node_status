@@ -72,7 +72,7 @@ check_pidof httpd httpd
 
 if [ -x /usr/sbin/exportfs ]
 then
-	usr_local=$(exportfs -v | grep -c /usr/local)
+	usr_local=$(/usr/sbin/exportfs -v | grep -c /usr/local)
 else
 	usr_local=1
 fi
