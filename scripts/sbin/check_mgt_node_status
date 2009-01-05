@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# check_mgt_node_status
+#
+# check various things on the mgt node, to see if it is ready for installing
+# compute nodes
+#
+# Written by Brett Pemberton, brett@vpac.org
+# Copyright (C) 2009 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+verbose=0
+
+if [ x"$1" == x"-v" ]
+then
+	verbose=1
+fi
+
+function check_pidof {
+
+	prog=$1
+	alias=$2
+
+	pid=$(pidof $prog)
+	if [ -z "$pid" ]
+	then
+		echo "ERROR: $alias is not running"
+	elif [ $verbose -eq 1 ]
+	then
+		echo "OK: $alias is running"
+	fi
+
+}
+
+check_pidof in.tftpd tftpd
+check_pidof nfsd nfsd
+check_pidof dhcpd dhcpd
+check_pidof httpd httpd
+
+usr_local=$(exportfs -v | grep -c /usr/local)
+if [ $usr_local -eq 0 ]
+then
+	echo "ERROR: /usr/local is not exported"
+elif [ $verbose -eq 1 ]
+then
+	echo "OK: /usr/local is exported"
+fi
