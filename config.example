@@ -10,8 +10,10 @@ number_of_compute_nodes=95
 mirror="rsync://mirror.aarnet.edu.au/centos"
 centosversion="5"
 
-# whitespace separated list of hosts without interconnect
+# whitespace separated list of hosts without certain hardware
 nointerconnect=""
+noecc=""
+nosmart=""
 
 compute_node_smart_drives="/dev/sda /dev/sdb /dev/sdc /dev/sdd"
 head_node_smart_drives="/dev/sda /dev/sdb /dev/sdc /dev/sdd"
