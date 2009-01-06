@@ -7,4 +7,4 @@ display centos5/install.msg
 
 label install
 	kernel centos5/vmlinuz
-	append acpi=off initrd=centos5/initrd.img ks=http://172.17.1.254/centos/5/ks-head.cfg ksdevice=eth1 ramdisk=8192 noselinux selinux=0
+	append initrd=centos5/initrd.img ks=http://172.17.1.254/centos/5/ks-head.cfg ksdevice=eth1 ramdisk=8192 noselinux selinux=0

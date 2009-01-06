@@ -103,6 +103,15 @@ then
 	echo "OK: tftpboot link is set up"
 fi
 
+stat /var/www/html/centos >/dev/null 2>&1
+if [ $? -ne 0 ]
+then
+	echo "ERROR: centos www link not set up"
+elif [ $verbose -eq 1 ]
+then
+	echo "OK: centos www link is set up"
+fi
+
 if [ ! -r /etc/ipmi_pass ]
 then
 	echo "ERROR: ipmi password file not set up"
