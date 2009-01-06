@@ -1,0 +1,81 @@
+#!/bin/bash
+
+# mce
+#
+# Produce errors based on the contents of /var/log/mcelog
+#
+# Written by Chris Samuel, csamuel@vpac.org
+# Copyright (C) 2007 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+if [ \! -s /var/log/mcelog ]; then
+	exit 0 ;
+fi
+
+status=0
+
+numbaddimms=`egrep DIMM[0-9] /var/log/mcelog | sort | uniq -c | egrep -c '^ *[4-9]'`
+
+if [ "$numbaddimms" -gt 0 ]; then
+	echo "ERROR ECC: $numbaddimms DIMM(s) with 4 or more errors"
+	status=1
+fi
+
+numdimms=`egrep DIMM[0-9] /var/log/mcelog | sort | uniq -c | wc -l`
+
+if [ -n "$numdimms" ]; then
+	if [ "$numdimms" -gt 4 ]; then
+		echo "ERROR ECC: $numdimms DIMMs with at least one ECC error"
+		status=1
+	fi
+fi
+
+numeccs=`fgrep -wc uncorrected /var/log/mcelog`
+
+if [ "$numeccs" -gt 4 ]; then
+	echo "ERROR ECC: More than 4 uncorrected ECC errors in total ($numeccs)"
+	status=1
+fi
+
+count=`fgrep -wc corrected /var/log/mcelog`
+
+if [ "$count" -gt 8 ]; then
+	echo "ERROR ECC: $count corrected ECC errors in total"
+	status=1
+fi
+
+totaleccs=`egrep -c ^MCE /var/log/mcelog`
+
+if [ "$totaleccs" -gt 30 ]; then
+	echo "ERROR ECC: More than 30 ECC messages in total ($totaleccs)"
+	status=1
+fi
+
+count=`egrep -c bit4[23] /var/log/mcelog`
+
+if [ "$count" -gt 5 ]; then
+	echo "ERROR ECC: L3 cache ECC errors (bit42 and/or bit43) ($count)"
+	status=1
+fi
+
+count=`fgrep -c L2 /var/log/mcelog`
+
+if [ "$count" -gt 4 ]; then
+	echo "ERROR ECC: L2 cache ECC errors ($count)"
+	status=1
+fi
+
+exit $status
