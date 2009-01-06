@@ -6,7 +6,8 @@ cluster="tango"
 mgtnode="tango-m.vpac.org"
 number_of_compute_nodes=95
 
-mirror="rsync://mirror.aarnet.edu.au"
+# root dir of centos mirror
+mirror="rsync://mirror.aarnet.edu.au/centos"
 centosversion="5"
 
 # whitespace separated list of hosts without interconnect
