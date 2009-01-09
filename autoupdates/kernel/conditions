@@ -11,4 +11,6 @@ then
 	exit 1
 fi
 
-exit 0
+installed=$(rpm --test -i /usr/local/recluse/centos/$centosversion/kernel/latest/*.rpm >/dev/null 2>&1)
+
+exit $?

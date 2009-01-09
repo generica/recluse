@@ -9,7 +9,13 @@ installed=$(rpm -q libibcommon | grep -q "$ofedver$")
 if [ $? -eq 1 ]
 then
 	/usr/local/recluse/scripts/canupdateinfiniband -s
-	exit $?
+
+	if [ $? -eq 0 ]
+	then
+		installed=$(rpm --test -i /usr/local/recluse/centos/$centosversion/ofed/latest/*.rpm >/dev/null 2>&1)
+		exit $?
+	fi
+
 fi
 
 exit 1
