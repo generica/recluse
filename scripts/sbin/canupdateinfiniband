@@ -27,7 +27,7 @@ then
 	silent=1
 fi
 
-for user in $(whosonnode)
+for user in $(/usr/local/recluse/scripts/bin/whosonnode)
 do
 	ulist="$ulist -u $user"
 done

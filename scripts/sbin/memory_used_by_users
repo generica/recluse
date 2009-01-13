@@ -20,7 +20,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-for username in $(whosonnode)
+for username in $(/usr/local/recluse/scripts/bin/whosonnode)
 do
 	ps aux | awk "/^$username /"'{ s=s+$4 }END{print "memory used by '$username': " s "%"}'
 done

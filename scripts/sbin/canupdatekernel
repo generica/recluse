@@ -20,9 +20,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-latestkernel=$( basename /usr/local/recluse/centos/5/kernel/latest/*.rpm  | awk -F\- '{print $2}')
+latestkernel=$(basename /usr/local/recluse/centos/5/kernel/latest/*.rpm  | awk -F\- '{print $2}')
 runningkernel=$(uname -r)
-usersonnode=$(whosonnode | wc -l)
+usersonnode=$(/usr/local/recluse/scripts/bin/whosonnode | wc -l)
 tmpfs=$(awk '/\/tmp/{print $3}' /proc/mounts)
 latesttraceroute=traceroute-2.0.1-3.el5
 traceroute=$(rpm -q traceroute)
