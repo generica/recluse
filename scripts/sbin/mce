@@ -22,19 +22,19 @@
 
 ########################################################################
 # If we have one or more DIMM with these or more errors, we're bad.
-allowed_per_dimm=4
-# If we have more than these DIMMs with at least threshold ECC error, we're bad.
-allowed_dimms_with_ecc=4; allowed_ecc_dimm_threshold=1;
+allowed_per_dimm=8
+# If we have more than these DIMMs with threshold or more ECC error, we're bad.
+allowed_dimms_with_ecc=4; allowed_ecc_dimm_threshold=2;
 # If we have more than these uncorrected ECC errors in total, we're bad.
-allowed_bad_ecc_total=1
+allowed_bad_ecc_total=0
 # If we have more than these corrected ECC errors in total, we're bad.
-allowed_ok_ecc_total=8
+allowed_ok_ecc_total=24
 # If we have more than these ECC messages in total, we're bad.
 allowed_mce_messages=30
 # If we have more than these L3 cache ECC errors, we're bad.
-allowed_l3_errors=5
+allowed_l3_errors=1
 # If we have more than these L2 cache ECC errors, we're bad.
-allowed_l2_errors=4
+allowed_l2_errors=1
 ########################################################################
 
 
@@ -53,7 +53,7 @@ fi
 status=0
 
 ##
-# If we have one or more DIMMs with 4 or more errors, we're bad.
+# If we have one or more DIMMs with $allowed_per_dimm or more errors, we're bad.
 ##
 
 count=0
@@ -61,66 +61,64 @@ count=0
 count=`egrep DIMM[0-9] /var/log/mcelog | sort | uniq -c | egrep -c "^ *[$allowed_per_dimm-9]|^ *[1-9][0-9]"`
 
 if [ "$count" -gt 0 ]; then
-	echo "ERROR ECC: $count DIMM(s) with $allowed_per_dimm or more errors"
+	echo "ERROR ECC: $count DIMM(s) with $allowed_per_dimm or more errors (DEEP)"
 	status=1
 fi
 
 ##
-# If we have more than 4 DIMMs with at least one ECC error, we're bad.
+# If we have $allowed_dimms_with_ecc DIMMs with more than $allowed_ecc_dimm_threshold errors, we're bad.
 ##
 
 count=0
 
-count=`egrep DIMM[0-9] /var/log/mcelog | sort | uniq -c | wc -l`
+count=`egrep DIMM[0-9] /var/log/mcelog | sort | uniq -c | egrep -c "^ *[$allowed_ecc_dimm_threshold-9]|^ *[1-9][0-9]"`
 
-if [ -n "$count" ]; then
-	if [ "$count" -gt $allowed_dimms_with_ecc ]; then
-		echo "ERROR ECC: $count DIMMs with at least one ECC error"
-		status=1
-	fi
+if [ "$count" -gt "$allowed_dimms_with_ecc" ]; then
+	echo "ERROR ECC: $count DIMM(s) with $allowed_ecc_dimm_threshold or more errors (WIDE)"
+	status=1
 fi
 
 ##
-# If we have more than 4 uncorrected ECC errors in total, we're bad.
+# If we have more than $allowed_bad_ecc_total uncorrected ECC errors in total, we're bad.
 ##
 
 count=0
 
 count=`fgrep -wc uncorrected /var/log/mcelog`
 
-if [ "$count" -gt $allowed_bad_ecc_total ]; then
+if [ "$count" -gt "$allowed_bad_ecc_total" ]; then
 	echo "ERROR ECC: More than $allowed_bad_ecc_total uncorrected ECC errors in total ($count)"
 	status=1
 fi
 
 ##
-# If we have more than 8 corrected ECC errors in total, we're bad.
+# If we have more than $allowed_ok_ecc_total corrected ECC errors in total, we're bad.
 ##
 
 count=0
 
 count=`fgrep -wc corrected /var/log/mcelog`
 
-if [ "$count" -gt $allowed_ok_ecc_total ]; then
-	echo "ERROR ECC: $allowed_ok_ecc_total corrected ECC errors in total"
+if [ "$count" -gt "$allowed_ok_ecc_total" ]; then
+	echo "ERROR ECC: More than $allowed_ok_ecc_total corrected ECC errors in total ($count)"
 	status=1
 fi
 
 ##
-# If we have more than 30 ECC messages in total, we're bad.
+# If we have more than $allowed_mce_messages ECC messages in total, we're bad.
 ##
 
 count=0
 
 count=`egrep -c ^MCE /var/log/mcelog`
 
-if [ "$count" -gt $allowed_mce_messages ]; then
+if [ "$count" -gt "$allowed_mce_messages" ]; then
 	echo "ERROR ECC: More than $allowed_mce_messages ECC messages in total ($count)"
 	status=1
 fi
 
 ##
-# If we have more than 5 L3 cache ECC errors, we're bad.
+# If we have more than $allowed_l3_errors L3 cache ECC errors, we're bad.
 # (Usually caught by scrub)
 ##
 
@@ -128,13 +126,13 @@ count=0
 
 count=`egrep -c bit4[23] /var/log/mcelog`
 
-if [ "$count" -gt $allowed_l3_errors ]; then
+if [ "$count" -gt "$allowed_l3_errors" ]; then
 	echo "ERROR ECC: L3 cache ECC errors (bit42 and/or bit43) ($count)"
 	status=1
 fi
 
 ##
-# If we have more than 4 L2 cache ECC errors, we're bad.
+# If we have more than $allowed_l2_errors L2 cache ECC errors, we're bad.
 # (Usually caught by scrub)
 ##
 
@@ -142,7 +140,7 @@ count=0
 
 count=`fgrep -c L2 /var/log/mcelog`
 
-if [ "$count" -gt $allowed_l2_errors ]; then
+if [ "$count" -gt "$allowed_l2_errors" ]; then
 	echo "ERROR ECC: L2 cache ECC errors ($count)"
 	status=1
 fi
