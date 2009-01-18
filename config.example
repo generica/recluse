@@ -15,6 +15,9 @@ nointerconnect=""
 noecc=""
 nosmart=""
 
+# whitespace separated list of known bad kernels
+bad_kernel_list="2.6.29-rc1"
+
 compute_node_smart_drives="/dev/sda /dev/sdb /dev/sdc /dev/sdd"
 head_node_smart_drives="/dev/sda /dev/sdb /dev/sdc /dev/sdd"
 mgt_node_smart_drives=""
