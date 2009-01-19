@@ -25,7 +25,14 @@ CONFIG=/usr/local/recluse/config
 [ -r "$CONFIG" ] || exit 0
 source $CONFIG
 
-for i in $(diagnose -n | awk "/^$cluster.*Down/"'{print $1}'); do
-	echo $i
+if [ $# -ne 0 ]
+then
+	command="diagnose -n -t $1"
+else
+	command="diagnose -n"
+fi
+
+for i in $($command | awk "/^$cluster.*Down/"'{print $1}'); do
+	echo -n "$i "
 	checknode $i | grep 'node rm message'
 done
