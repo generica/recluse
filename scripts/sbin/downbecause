@@ -34,5 +34,5 @@ fi
 
 for i in $($command | awk "/^$cluster.*Down/"'{print $1}'); do
 	echo -n "$i "
-	checknode $i | grep 'node rm message'
+	checknode $i | grep 'node rm message' | cut -b 25-
 done
