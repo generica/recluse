@@ -31,12 +31,12 @@ fi
 
 # Don't do anything silly..
 
-if [ "$VICTIM" = "root" ]; then
+if [ "$VICTIM" == "root" -o "$VICTIM" == "-0" ]; then
 	echo "Not allowed to killuser root!"
 	exit 1
 fi
 
-if [ "$VICTIM" = "$USER" ]; then
+if [ "$VICTIM" == "$USER" ]; then
 	echo "Not allowed to killuser yourself!"
 	exit 1
 fi
