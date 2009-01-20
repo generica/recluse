@@ -1,1 +1,0 @@
-sbin/mac_collection.py
