@@ -1,3 +1,3 @@
 #!/bin/bash
 
-/usr/local/recluse/scripts/removekernels
+/usr/local/recluse/scripts/sbin/removekernels
