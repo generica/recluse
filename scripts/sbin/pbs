@@ -27,7 +27,7 @@
 NODETYPE="compute"
 export PBSCOREDUMP=true
 
-source /etc/init.d/functions
+[ -r /etc/init.d/functions ] && source /etc/init.d/functions
 
 CONFIG=/usr/local/recluse/config
 [ -r "$CONFIG" ] || echo "Can't source $CONFIG"
