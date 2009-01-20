@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PATH=/usr/local/recluse/scripts:$PATH
+PATH=/usr/local/recluse/scripts/bin:/usr/local/recluse/scripts/sbin:$PATH
 
 immediate=0
 

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+ETH_IP=$(ifconfig eth0 | grep "inet addr:" | cut -d: -f 2 | cut -d' ' -f 1)
+
+# if they don't exist, and are stored, grab them
+if [ -d /usr/local/recluse/nodestatus/ssh/${ETH_IP}/ -a ! -e /etc/ssh/ssh_host_dsa_key ]
+then
+	exit 0
+fi
+
+exit 1
