@@ -32,7 +32,11 @@ else
 	command="diagnose -n"
 fi
 
-for i in $($command | awk "/^$cluster.*Down/"'{print $1}'); do
-	echo -n "$i "
-	checknode $i | grep 'node rm message' | cut -b 25-
+for i in $($command | egrep "^$cluster" | egrep "Down|Drained" | awk '{print $1}'); do
+	reason=$(checknode $i | grep 'node rm message' | cut -b 26-)
+	if [ x"$reason" == "x" ]
+	then
+		reason="NO REASON"
+	fi
+	echo "$i  $reason"
 done
