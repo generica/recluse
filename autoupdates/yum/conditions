@@ -1,6 +1,7 @@
 #!/bin/bash
 
 [ -x /usr/bin/yum ] || exit 1
+[ -e /var/run/yum.pid ] && exit 1
 
 users=$(whatson -s | wc -l)
 
