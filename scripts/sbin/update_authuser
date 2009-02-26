@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# update_authuser
+#
+# make sure /etc/authuser reflects running jobs
+#
+# Written by Brett Pemberton <brett@vpac.org>
+# Copyright (C) 2009 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+if [ $# -ne 0 ]
+then
+	diff=1
+else
+	diff=0
+fi
+
+[ -w /etc/authuser ] || exit 0
+[ -e /etc/authuser.new ] && rm -f /etc/authuser.new
+
+touch /etc/authuser.new
+
+for user in $(cat /etc/authuser)
+do
+	proc_count=$(ps hU $user | wc -l)
+	if [ $proc_count -gt 0 ]
+	then
+		echo $user >> /etc/authuser.new
+	fi		
+done
+
+if [ $diff -eq 0 ]
+then
+	mv /etc/authuser.new /etc/authuser
+else
+	diff -u /etc/authuser /etc/authuser.new
+	rm -f /etc/authuser.new
+fi
