@@ -1,0 +1,63 @@
+#!/bin/sh
+
+# killuser-mom
+#
+# Simple script to kill all a users jobs, except mom processes
+#
+# Written by Chris Samuel <csamuel@vpac.org>
+# Copyright (C) 2004 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>
+
+VICTIM=$1
+
+if [ -z "$VICTIM" ]; then
+	echo "Usage: killuser <user>"
+	exit 1
+fi
+
+# Don't do anything silly..
+
+if [ "$VICTIM" = "root" ]; then
+	echo "Not allowed to killuser root!"
+	exit 1
+fi
+
+if [ "$VICTIM" = "$USER" ]; then
+	echo "Not allowed to killuser yourself!"
+	exit 1
+fi
+
+echo "proclist:"
+ps h U $VICTIM o '%p %c'
+
+JOBS=$(ps h U $VICTIM o '%p %c' | egrep -v pbs_mom\|cp | awk '{print $1}')
+JOBS_NOKILL=$(ps h U $VICTIM o '%p %c' | egrep pbs_mom\|cp | awk '{print $1}')
+
+if [ -z "$JOBS" ]; then
+	echo "No jobs belonging to $VICTIM"
+	exit 1
+fi
+
+echo "Found processes:"
+ps $JOBS
+echo
+echo "Found processes (and won't kill):"
+ps $JOBS_NOKILL
+echo
+echo "Killing them nicely.."
+kill $JOBS
+sleep 5
+echo "killing them nastily.."
+kill -9 $JOBS
