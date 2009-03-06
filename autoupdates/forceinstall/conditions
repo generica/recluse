@@ -6,11 +6,18 @@ hostname=$(hostname | sed -e 's/\..*//')
 
 if [ "$hostname" == "$cluster" ]
 then
-	list=$(eval echo /usr/local/recluse/centos/$centosversion/forceinstall/*.rpm /usr/local/recluse/centos/$centosversion/forceinstall.head/*.rpm)
+	list=$(eval echo /usr/local/recluse/centos/$centosversion/forceinstall*/*.rpm)
 else
 	list=$(eval echo /usr/local/recluse/centos/$centosversion/forceinstall/*.rpm)
 fi
 
-installed=$(rpm --test -i $list >/dev/null 2>&1)
+for package in $(echo $list)
+do
+	installed=$(rpm --test -i $package >/dev/null 2>&1)
+	if [ $? -eq 0 ]
+	then
+		exit 0
+	fi
+done
 
-exit $?
+exit 1
