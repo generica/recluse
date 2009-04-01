@@ -16,7 +16,7 @@ noecc=""
 nosmart=""
 
 # whitespace separated list of known bad kernels
-bad_kernel_list="2.6.29-rc1"
+bad_kernel_list="2.6.29-rc1 2.6.29-rc3"
 
 compute_node_smart_drives="/dev/sda /dev/sdb /dev/sdc /dev/sdd"
 head_node_smart_drives="/dev/sda /dev/sdb /dev/sdc /dev/sdd"
@@ -25,7 +25,7 @@ smart_options="-d ata"
 
 ipmi_user=ADMIN
 
-storage_server="stg5"
+storage_server="stg7"
 compute_runs_xvfb=1
 
 user_lookup=brett
