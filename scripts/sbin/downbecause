@@ -301,6 +301,8 @@ if __name__ == "__main__":
             line_break = line.split()
             node = line_break[0]
             reason = ' '.join(line_break[2:])
+            if reason == "":
+                reason = "NO REASON"
             if node not in downnodes:
                 downnodes.append(node)
                 nodes[node] = {'pbs': reason}
