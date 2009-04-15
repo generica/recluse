@@ -21,6 +21,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
+import getopt
 
 def nodefreein(node):
     from subprocess import Popen, PIPE
@@ -54,13 +55,36 @@ def get_moab_reason(node):
     for line in checknode_list:
         if line.find('node rm message') != -1:
             line_break = line.split('\'')
-            reason = line_break[1]
+            reason = line_break[1][6:]
 
     return reason
 
 if __name__ == "__main__":
 
     downnodes = []
+    verbose = False
+    show_moab = True
+    show_pbs = True
+
+    opts, args = getopt.getopt(sys.argv[1:], 'vhpm')
+    opts = dict(opts)
+
+    if '-v' in opts:
+        verbose = True
+
+    if '-p' in opts:
+        show_moab = False
+
+    if '-m' in opts:
+        show_pbs = False
+
+    if '-h' in opts:
+        print "usage: downbecause [-v] [-h] [-p] [-m]"
+        print "\t-p\tonly show PBS"
+        print "\t-m\tonly show moab"
+        print "\t-v\tverbose output"
+        print "\t-h\tshow help message"
+        sys.exit(-1)
 
     config = open('/usr/local/recluse/config', 'r')
     our_config = config.readlines()
@@ -133,10 +157,27 @@ if __name__ == "__main__":
             longest_moab = moab_count
 
     for node in downnodes:
-        print node + " -- " + nodes[node]['pbs'],
-        for i in range(len(nodes[node]['pbs']), longest_pbs):
-            print "",
-        print "-- " + nodes[node]['moab'],
-        for i in range(len(nodes[node]['moab']), longest_moab):
-            print "",
-        print "-- " + nodefreein(node)
+        print node,
+        if show_pbs:
+            print "-",
+            print nodes[node]['pbs'],
+            for i in range(len(nodes[node]['pbs']), longest_pbs):
+                print "",
+        if show_moab:
+            print "-",
+            print nodes[node]['moab'],
+            for i in range(len(nodes[node]['moab']), longest_moab):
+                print "",
+
+        print "-",
+
+        free = nodefreein(node)
+
+        if verbose:
+            print free
+        else:
+            free_split = free.split()
+            if free_split[1] == "free":
+                print "free"
+            else:
+                print free_split[4]        
