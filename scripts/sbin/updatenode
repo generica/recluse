@@ -20,7 +20,7 @@
 
 # NOTE! --- must keep trailing slash
 root=/usr/local/recluse/root/
-root_head=/usr/local/recluse/root_head/
+root_parent=/usr/local/recluse/root_
 
 opts="-aK --exclude=.svn"
 
@@ -43,30 +43,33 @@ fi
 # if not, then we deduce if we're on the head node
 # if so, sync to the head node tree after the compute node tree
 
-if [ x"$1" == x"compute" ]
+if [ x"$1" == "x" ]
 then
-	mode=compute
-elif [ x"$1" == x"head" ]
-then
-	mode=head
-elif [ x"$NODE" == "xcompute" ]
-then
-	mode=compute
-elif [ x"$NODE" == "xhead" ]
-then
-	mode=head
-elif [ "$hostname" == "$cluster" ]
-then
-	mode=head
+	if [ "$hostname" == "$cluster" ]
+	then
+		mode=head
+	else
+		mode=compute
+	fi
 else
-	mode=compute
+	mode=$1
+fi
+
+if [ -e /etc/recluse_node ]
+then
+	source /etc/recluse_node
+fi
+
+if [ x"$NODE" != "x" ]
+then
+	mode=$NODE
 fi
 
 rsync ${opts} $root /
 
-if [ "$mode" == "head" ]
+if [ -d ${root_parent}${mode} ]
 then
-	rsync ${opts} $root_head /
+	rsync ${opts} ${root_parent}${mode}/ /
 fi
 
 ldconfig
