@@ -1,0 +1,87 @@
+#! /usr/bin/env python
+
+import sys
+import re
+import pbs
+from PBSQuery import PBSQuery
+
+jobmap = {}
+nodejobs = {}
+nodestates = {}
+procowners = []
+
+def get_job_map():
+
+    p = PBSQuery()
+    jobs = p.getjobs()
+    for name, job in jobs.items():
+        if job['job_state'] == "R" or job['job_state'] == "E":
+            owner = job['euser']
+            jobnum = name.split('.')[0]
+            jobmap[jobnum] = owner
+
+def get_node_info():
+
+    p = PBSQuery()
+    nodes = p.getnodes()
+
+    for name, node in nodes.items():
+        nodestates[name] = node['state']
+        if 'jobs' in node:
+            nodejobs[name] = node['jobs']
+        else:
+            nodejobs[name] = ""
+
+def get_proc_info():
+
+    from subprocess import Popen, PIPE
+    proc = Popen(['/usr/local/bin/dsh', '-f', '-N', 'compute', '/usr/local/recluse/scripts/bin/whosonnode'], stdout=PIPE, stderr=PIPE)
+    return_code = proc.wait()
+    if return_code == 0:
+        dsh_out = proc.stdout.read()
+        dsh_err = proc.stderr.read()
+    else:
+        print "ERROR: %s:\n%s" % (return_code, proc.stderr.read())
+        sys.exit(-1)
+
+    dsh_list = dsh_err.split('\n')
+
+    for line in dsh_list:
+        if re.search('^[a-zA-Z0-9]*:.*[a-zA-Z0-9]*$', line):
+            line_split = line.split(': ')
+            procowners.append({line_split[0]: line_split[1].strip()})
+
+def compare_procs_with_jobs():
+    for dict in procowners:
+
+        has_owner = 0
+
+        node = dict.keys()[0]
+        proc_owner = dict.values()[0]
+
+#        print "dealing with " + proc_owner + " on " + node
+
+        jobs = nodejobs[node]
+
+        jobs_split = jobs.split(',')
+        for job in jobs_split:
+            if job != "":
+                num = re.split('[\./]', job)[1]
+                if jobmap[num] == proc_owner:
+                    has_owner = 1
+
+        if has_owner == 0:
+            print "rogue process owned by: " + proc_owner + " on " + node
+
+if __name__ == "__main__":
+
+    get_job_map()
+    get_node_info()
+    get_proc_info()
+
+#    print jobmap
+#    print nodestates
+#    print nodejobs
+#    print procowners
+
+    compare_procs_with_jobs()
