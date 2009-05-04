@@ -24,10 +24,10 @@ import sys
 import re
 import pbs
 from PBSQuery import PBSQuery
+import getopt
 
 jobmap = {}
 nodejobs = {}
-nodestates = {}
 procowners = []
 
 def get_job_map():
@@ -46,7 +46,6 @@ def get_node_info():
     nodes = p.getnodes()
 
     for name, node in nodes.items():
-        nodestates[name] = node['state']
         if 'jobs' in node:
             nodejobs[name] = node['jobs']
         else:
@@ -67,7 +66,7 @@ def get_proc_info():
     dsh_list = dsh_err.split('\n')
 
     for line in dsh_list:
-        if re.search('^[a-zA-Z0-9]*:.*[a-zA-Z0-9]*$', line):
+        if re.search('^\w*:\s*\w*$', line):
             line_split = line.split(': ')
             procowners.append({line_split[0]: line_split[1].strip()})
 
@@ -79,7 +78,8 @@ def compare_procs_with_jobs():
         node = dict.keys()[0]
         proc_owner = dict.values()[0]
 
-#        print "dealing with " + proc_owner + " on " + node
+        if verbose:
+            print "dealing with " + proc_owner + " on " + node
 
         jobs = nodejobs[node]
 
@@ -95,13 +95,36 @@ def compare_procs_with_jobs():
 
 if __name__ == "__main__":
 
+    verbose = False
+
+    opts, args = getopt.getopt(sys.argv[1:], 'v')
+    opts = dict(opts)
+
+    if '-v' in opts:
+        verbose = True
+
+    if verbose:
+        print "Getting job map:"
+
     get_job_map()
+
+    if verbose:
+        print jobmap
+
+    if verbose:
+        print "Getting node info:"
+
     get_node_info()
+
+    if verbose:
+        print nodejobs
+
+    if verbose:
+        print "Getting process info:"
+
     get_proc_info()
 
-#    print jobmap
-#    print nodestates
-#    print nodejobs
-#    print procowners
+    if verbose:
+        print procowners
 
     compare_procs_with_jobs()
