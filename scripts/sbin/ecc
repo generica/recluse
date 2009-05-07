@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# ecc
+#    
+# Check whether ecc is enabled in the BIOS, and report on whether
+# the node is free to have it changed, if it is disabled
+#                                                        
+# Written by Chris Samuel, csamuel@vpac.org              
+# Copyright (C) 2008 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or   
+# (at your option) any later version.                                 
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of 
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the  
+# GNU General Public License for more details.                   
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+busy=$(/usr/local/recluse/scripts/bin/whatson -s | wc -l)
+
+dmidecode | grep -A7 "Physical Memory Array" | grep "Error Correction"| grep -q ECC
+
+if [ "$?" == "1" ]; then
+	if [ "$busy" == "0" ]; then
+		echo "ECC is off and node idle"
+		exit 2
+	else
+		echo "ECC is off and node busy"
+		exit 1
+	fi
+else
+	echo "ECC is on"
+	exit 0
+fi
