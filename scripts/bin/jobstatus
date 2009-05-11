@@ -22,7 +22,10 @@
 
 if [ $# -ne 2 ]
 then
-	echo "usage: $0 <o|e> <job number>"
+	echo "usage: $0 <o|e|t> <job number>"
+	echo "       show [o]utput"
+        echo "            [e]rror"
+        echo "            [t]mpdir for a job"
 	exit
 fi
 
@@ -32,8 +35,14 @@ then
 elif [ "$1" == "o" ]
 then
 	oe="OU"
+elif [ "$1" == "t" ]
+then
+	oe="t"
 else
-	echo "usage: $0 <o|e> <job number>"
+	echo "usage: $0 <o|e|t> <job number>"
+	echo "       show [o]utput"
+        echo "            [e]rror"
+        echo "            [t]mpdir for a job"
 	exit
 fi	
 
@@ -58,4 +67,9 @@ fi
 
 leadnode=$(checkjob -v $job | grep "Task Distribution" | awk -F, '{print $1}' | awk '{print $3}')
 
-ssh $leadnode "cat /usr/spool/PBS/spool/${job}.*.${oe}"
+if [ "$oe" == "t" ]
+then
+	ssh $leadnode "ls -l /tmp/${job}.*/"
+else
+	ssh $leadnode "cat /usr/spool/PBS/spool/${job}.*.${oe}"
+fi
