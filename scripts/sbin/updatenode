@@ -27,6 +27,16 @@ opts="-aK --exclude=.svn"
 hostname=$(hostname | sed -e 's/\..*//')
 cluster=$(echo $hostname | sed -e 's/[0-9][0-9][0-9]//' -e 's/-m$//')
 
+if [ -e /etc/recluse_node ]
+then
+	source /etc/recluse_node
+fi
+
+if [ x"$NODE" != "x" ]
+then
+	mode=$NODE
+fi
+
 if [ "$hostname" == "${cluster}-m" ]
 then
 	echo "Do not run on management node"
@@ -43,7 +53,12 @@ fi
 # if not, then we deduce if we're on the head node
 # if so, sync to the head node tree after the compute node tree
 
-if [ x"$1" == "x" ]
+if [ -d ${root_parent}$1 ]
+then
+	mode=$1
+fi
+
+if [ x"$mode" == "x" ]
 then
 	if [ "$hostname" == "$cluster" ]
 	then
@@ -51,18 +66,6 @@ then
 	else
 		mode=compute
 	fi
-else
-	mode=$1
-fi
-
-if [ -e /etc/recluse_node ]
-then
-	source /etc/recluse_node
-fi
-
-if [ x"$NODE" != "x" ]
-then
-	mode=$NODE
 fi
 
 rsync ${opts} $root /
