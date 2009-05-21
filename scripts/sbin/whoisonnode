@@ -46,10 +46,12 @@ do
 	user=$(checkjob $job | awk -F: '/user/{print $3}' | awk '{print $1}');
 	duration=$(checkjob $job | awk '/Duration/{print $3 " " $4 " " $5 " " $6 " " $7 " " $8}');
 	email=$(cat /home/$user/.forward | grep @)
+	coresonnode=$(checkjob $job | grep $node | head -n1 | awk -F"$node" '{print $2}' | awk -F']' '{print $1}' | awk -F: '{print $2}')
+	corestotal=$(checkjob $job | grep "Total Requested Tasks:" | awk '{print $4}')
 	if [ $printemail -eq 1 ]
 	then
-		echo "job: $job - $user - $email"
+		echo "job: $job - [$coresonnode/$corestotal] - $user - $email"
 	else
-		echo "job: $job - $user - $duration"
+		echo "job: $job - [$coresonnode/$corestotal] - $user - $duration"
 	fi
 done
