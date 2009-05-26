@@ -18,7 +18,6 @@ smart_options="-d ata"
 ipmi_user=ADMIN
 
 storage_server="stg7"
-compute_runs_xvfb=1
 
 user_lookup=brett
 

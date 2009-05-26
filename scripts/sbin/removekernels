@@ -40,7 +40,14 @@ then
 	fi
 fi
 
-mostrecent=$(basename /usr/local/recluse/centos/$centosversion/kernel/latest/*.rpm  | awk -F\- '{print $2}')
+if [ -d /usr/local/recluse/centos/$centosversion/kernel.${KERNELTYPE} ]
+then
+        KERNELDIR="/usr/local/recluse/centos/$centosversion/kernel.${KERNELTYPE}"
+else
+        KERNELDIR="/usr/local/recluse/centos/$centosversion/kernel"
+fi
+
+mostrecent=$(basename $KERNELDIR/latest/*.rpm  | awk -F\- '{print $2}')
 running=$(uname -r | sed -e 's/-rc\([0-9]\)/rc\1/' -e 's/-generic/generic/')
 
 for kernel in $(rpm -qa kernel | grep -v "$running-" | grep -v $mostrecent | grep -v ".el5")
