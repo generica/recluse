@@ -9,6 +9,7 @@ number_of_compute_nodes=115
 # root dir of centos mirror
 mirror="rsync://mirror.aarnet.edu.au/centos"
 centosversion="5"
+arch="x86_64"
 
 # whitespace separated list of known bad kernels
 bad_kernel_list="2.6.29-rc1 2.6.29-rc3"
