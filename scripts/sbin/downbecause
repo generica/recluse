@@ -322,14 +322,18 @@ if __name__ == "__main__":
 
     downnodes.sort()
 
+    longest_node = 0
     longest_pbs = 0
     longest_moab = 0
 
     term = TerminalController()
 
     for node in downnodes:
+        node_count = len(node)
         pbs_count = len(nodes[node]['pbs'])
         moab_count = len(nodes[node]['moab'])
+        if node_count > longest_node:
+            longest_node = node_count
         if pbs_count > longest_pbs:
             longest_pbs = pbs_count
         if moab_count > longest_moab:
@@ -345,6 +349,8 @@ if __name__ == "__main__":
             line = "${RED}"
 
         line += node
+        for i in range(len(node), longest_node):
+            line += " "
         if show_pbs:
             line += " - "
             line += nodes[node]['pbs']
