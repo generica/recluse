@@ -53,7 +53,7 @@ do
 		# part of a cpuset, but no job id
 		continue
 	fi
-	mem_requested_per_core=$(qstat -f $job | awk '/Resource_List.pmem/{print $3}')
+	mem_requested_per_core=$(qstat -f $job | awk '/Resource_List.p.?mem/{print $3}' | sort -n | tail -n1)
 	mb_count=$(echo $mem_requested_per_core | egrep -c "[0-9]*mb")
 	cores=$(qstat -f $job | grep Resource_List.nodes | awk -Fppn= '{print $2}')
 	if [ -z $cores ]
