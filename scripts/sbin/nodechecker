@@ -71,6 +71,9 @@ def get_proc_info():
             procowners.append({line_split[0]: line_split[1].strip()})
 
 def compare_procs_with_jobs():
+
+    exit_status = 0
+
     for dict in procowners:
 
         has_owner = 0
@@ -92,6 +95,9 @@ def compare_procs_with_jobs():
 
         if has_owner == 0:
             print "rogue process owned by: " + proc_owner + " on " + node
+            exit_status = 1
+
+    return exit_status
 
 if __name__ == "__main__":
 
@@ -127,4 +133,6 @@ if __name__ == "__main__":
     if verbose:
         print procowners
 
-    compare_procs_with_jobs()
+    exit_status = compare_procs_with_jobs()
+
+    sys.exit(exit_status)
