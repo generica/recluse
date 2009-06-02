@@ -297,7 +297,7 @@ if __name__ == "__main__":
     nodes = {}
 
     for line in pbsnodes_list:
-        if line.startswith(cluster):
+        if line != "":
             line_break = line.split()
             node = line_break[0]
             reason = ' '.join(line_break[2:])
@@ -309,16 +309,17 @@ if __name__ == "__main__":
                 nodes[node]['moab'] = "NO REASON"
 
     for line in diagnose_list:
-        if line.startswith(cluster) and ( line.find('Down') != -1 or line.find('Drained') != -1 ):
-            line_break = line.split()
-            node = line_break[0]
-            reason = get_moab_reason(node)
-            if node not in downnodes:
-                downnodes.append(node)
-                nodes[node] = {'moab': reason}
-                nodes[node]['pbs'] = "NO REASON"
-            else:
-                nodes[node]['moab'] = reason
+        line_break = line.split()
+        if len(line_break) == 5:
+            if line_break[1] == "Down" or line_break[1] == "Drained":
+                node = line_break[0]
+                reason = get_moab_reason(node)
+                if node not in downnodes:
+                    downnodes.append(node)
+                    nodes[node] = {'moab': reason}
+                    nodes[node]['pbs'] = "NO REASON"
+                else:
+                    nodes[node]['moab'] = reason
 
     downnodes.sort()
 
