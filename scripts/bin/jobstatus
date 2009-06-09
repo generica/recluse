@@ -22,10 +22,11 @@
 
 if [ $# -ne 2 ]
 then
-	echo "usage: $0 <o|e|t> <job number>"
+	echo "usage: $0 <o|e|t|m> <job number>"
 	echo "       show [o]utput"
         echo "            [e]rror"
         echo "            [t]mpdir for a job"
+        echo "            [m]memory usage for a job"
 	exit
 fi
 
@@ -38,11 +39,15 @@ then
 elif [ "$1" == "t" ]
 then
 	oe="t"
+elif [ "$1" == "m" ]
+then
+	oe="m"
 else
-	echo "usage: $0 <o|e|t> <job number>"
+	echo "usage: $0 <o|e|t|m> <job number>"
 	echo "       show [o]utput"
         echo "            [e]rror"
         echo "            [t]mpdir for a job"
+        echo "            [m]memory usage for a job"
 	exit
 fi	
 
@@ -70,6 +75,9 @@ leadnode=$(checkjob -v $job | grep "Task Distribution" | awk -F, '{print $1}' | 
 if [ "$oe" == "t" ]
 then
 	ssh $leadnode "ls -l /tmp/${job}.*/"
+elif [ "$oe" == "m" ]
+then
+	ssh $leadnode "/usr/local/recluse/scripts/sbin/memory_used_by_job ${job}"
 else
 	ssh $leadnode "cat /usr/spool/PBS/spool/${job}.*.${oe}"
 fi
