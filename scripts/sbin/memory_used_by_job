@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# memory_used_by_job
+#
+# Print the total memory used by a job
+#
+# Written by Brett Pemberton, brett@vpac.org
+# Copyright (C) 2008 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+if [ $# -ne 1 ]
+then
+	echo "usage: $0 <job number>"
+	exit
+fi
+
+job=$1
+
+if [ ! -d /dev/cpuset ]
+then
+	echo "ERROR: Cannot run this script on this cluster"
+	exit 1
+fi
+
+fulljob=$(qstat -f ${job} | egrep "^Job Id:" | awk '{print $3}')
+
+if [ x"$fulljob" == "x" ]
+then
+	echo "ERROR: qstat problem"
+	exit 1
+fi
+
+if [ ! -d /dev/cpuset/torque/${fulljob} ]
+then
+	echo "ERROR: Job does not appear to be running on this node"
+	exit 1
+fi
+
+ps aux | egrep -f /dev/cpuset/torque/${fulljob}/tasks | awk '{ s=s+$4 }END{print "memory used by job '${job}': " s "%"}'
