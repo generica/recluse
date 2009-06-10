@@ -48,4 +48,8 @@ then
 	exit 1
 fi
 
-ps aux | egrep -f /dev/cpuset/torque/${fulljob}/tasks | awk '{ s=s+$4 }END{print "memory used by job '${job}': " s "%"}'
+mem_percent=$(ps aux | egrep -f /dev/cpuset/torque/${fulljob}/tasks | awk '{ s=s+$4 }END{ print s }')
+mem_total=$(free | awk '/^Mem/{print $2}')
+mem_used=$(echo "scale=0; $mem_total*$mem_percent/100/1024" | bc)
+
+echo "memory used by job ${job}: ${mem_used} mb [${mem_percent}%]"
