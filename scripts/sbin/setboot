@@ -47,7 +47,7 @@ fi
 
 if [ -f $dir/$hex_machine ]
 then
-	status_machine=$(\ls -l $dir/$hex_machine | awk -F" -> " '{print $2}')
+	status_machine=$(readlink $dir/$hex_machine)
 else
 	echo "machine status not set yet"
 fi
