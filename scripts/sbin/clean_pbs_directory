@@ -57,7 +57,7 @@ fi
 
 if [ $running -eq 1 ]
 then
-	running_job_list=$(/usr/local/sbin/momctl -d0 | awk '/^job/{print $1}' | sed 's/job\[\(.*\)\]/\1/')
+	running_job_list=$(/usr/local/sbin/momctl -d0 | awk '/^job.*RUNNING/{print $1}' | sed 's/job\[\(.*\)\]/\1/')
 else
 	running_job_list=""
 fi
