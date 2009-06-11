@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 # downbecause
-#    
+# 
 # Produce errors for offline nodes based on moab and torque information
 #                                                        
 # Written by Chris Samuel, csamuel@vpac.org              
@@ -199,7 +199,7 @@ def nodefreein(node):
     if return_code == 0:
         nodefreein = proc.stdout.read()
     else:
-        print "ERROR: %s:\n%s" % (return_code, proc.stderr.read())
+        print "ERROR: nodefreein - %s:\n%s" % (return_code, proc.stderr.read())
         sys.exit(-1)
 
     line_break = nodefreein.split()
@@ -214,7 +214,7 @@ def get_moab_reason(node):
     if return_code == 0:
         checknode = proc.stdout.read()
     else:
-        print "ERROR: %s:\n%s" % (return_code, proc.stderr.read())
+        print "ERROR: checknode - %s:\n%s" % (return_code, proc.stderr.read())
         sys.exit(-1)
 
     checknode_list = checknode.split('\n')
@@ -280,7 +280,7 @@ if __name__ == "__main__":
         if return_code == 0:
             pbsnodes = proc.stdout.read()
         else:
-            print "ERROR: %s:\n%s" % (return_code, proc.stderr.read())
+            print "ERROR: pbsnodes - %s:\n%s" % (return_code, proc.stderr.read())
             sys.exit(-1)
 
     proc = Popen(['diagnose', '-n'], stdout=PIPE, stderr=PIPE)
@@ -288,7 +288,7 @@ if __name__ == "__main__":
     if return_code == 0:
         diagnose = proc.stdout.read()
     else:
-        print "ERROR: %s:\n%s" % (return_code, proc.stderr.read())
+        print "ERROR: diagnose - %s:\n%s" % (return_code, proc.stderr.read())
         sys.exit(-1)
 
     pbsnodes_list = pbsnodes.split('\n')

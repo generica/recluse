@@ -45,7 +45,12 @@ for job in $(echo $joblist | tr ',' '\n')
 do
 	user=$(checkjob $job | awk -F: '/user/{print $3}' | awk '{print $1}');
 	duration=$(checkjob $job | awk '/Duration/{print $3 " " $4 " " $5 " " $6 " " $7 " " $8}');
-	email=$(cat /home/$user/.forward | grep @)
+	if [ -r /home/$user/.forward ]
+	then
+		email=$(cat /home/$user/.forward | grep @)
+	else
+		email=""
+	fi
 	coresonnode=$(checkjob $job | grep $node | head -n1 | awk -F"$node" '{print $2}' | awk -F']' '{print $1}' | awk -F: '{print $2}')
 	corestotal=$(checkjob $job | grep "Total Requested Tasks:" | awk '{print $4}')
 	if [ $printemail -eq 1 ]
