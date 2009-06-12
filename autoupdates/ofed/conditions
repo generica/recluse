@@ -1,19 +1,34 @@
 #!/bin/bash
 
-source /usr/local/recluse/config
+CONFIG=/usr/local/recluse/config
+[ -r "$CONFIG" ] || echo "Can't source $CONFIG"
+[ -r "$CONFIG" ] || exit 0                     
+source $CONFIG
 
-ofedver=$(basename /usr/local/recluse/centos/$centosversion/ofed/latest/mstflint-*.rpm | sed 's/.*\(ofed.*\).x86_64.rpm/\1/')
-
-installed=$(rpm -q libibcommon | grep -q "$ofedver$")
-
-if [ $? -eq 1 ]
+if test "${HAS_OFED+set}" = set;
 then
-	/usr/local/recluse/scripts/sbin/canupdateinfiniband -s
+	host_ofed=$HAS_OFED
+else
+	host_ofed=1
+fi
 
-	if [ $? -eq 0 ]
+if [ $host_ofed -eq 1 ]
+then
+
+	ofedver=$(basename /usr/local/recluse/centos/$centosversion/ofed/latest/mstflint-*.rpm | sed 's/.*\(ofed.*\).x86_64.rpm/\1/')
+
+	installed=$(rpm -q libibcommon | grep -q "$ofedver$")
+
+	if [ $? -eq 1 ]
 	then
-		installed=$(rpm --test -i /usr/local/recluse/centos/$centosversion/ofed/latest/*.rpm >/dev/null 2>&1)
-		exit $?
+		/usr/local/recluse/scripts/sbin/canupdateinfiniband -s
+
+		if [ $? -eq 0 ]
+		then
+			installed=$(rpm --test -i /usr/local/recluse/centos/$centosversion/ofed/latest/*.rpm >/dev/null 2>&1)
+			exit $?
+		fi
+
 	fi
 
 fi
