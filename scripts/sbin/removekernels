@@ -50,6 +50,11 @@ fi
 mostrecent=$(basename $KERNELDIR/latest/*.rpm  | awk -F\- '{print $2}')
 running=$(uname -r | sed -e 's/-rc\([0-9]\)/rc\1/' -e 's/-generic/generic/')
 
+if [ x"$mostrecent" == "x" ]
+then
+	exit 0
+fi
+
 for kernel in $(rpm -qa kernel | grep -v "$running-" | grep -v $mostrecent | grep -v ".el5")
 do
 	echo "will remove $kernel"
