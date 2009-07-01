@@ -20,64 +20,78 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+function usage {
+
+	echo "usage: $0 <o|e|p|t|m> <job number>"
+	echo "       show [o]utput"
+        echo "            [e]rror"
+        echo "            [p]bs-script for a job"
+        echo "            [t]mpdir for a job"
+        echo "            [m]memory usage for a job"
+	exit
+}
+
+function check_if_running {
+
+	state=$(qstat -f $1 | awk '/job_state/{print $3}')
+
+	if [ $state != "R" ]
+	then
+		echo "$job is not yet running"
+		exit
+	fi
+}
+
+function check_if_job {
+
+	qstat $job >/dev/null 2>&1
+	isjob=$?
+
+	if [ $isjob -ne 0 ]
+	then
+		echo "$job doesn't appear to be a job"
+		exit
+	fi
+
+}
+
 if [ $# -ne 2 ]
 then
-	echo "usage: $0 <o|e|t|m> <job number>"
-	echo "       show [o]utput"
-        echo "            [e]rror"
-        echo "            [t]mpdir for a job"
-        echo "            [m]memory usage for a job"
-	exit
+	usage
 fi
-
-if [ "$1" == "e" ]
-then
-	oe="ER"
-elif [ "$1" == "o" ]
-then
-	oe="OU"
-elif [ "$1" == "t" ]
-then
-	oe="t"
-elif [ "$1" == "m" ]
-then
-	oe="m"
-else
-	echo "usage: $0 <o|e|t|m> <job number>"
-	echo "       show [o]utput"
-        echo "            [e]rror"
-        echo "            [t]mpdir for a job"
-        echo "            [m]memory usage for a job"
-	exit
-fi	
 
 job=$2
 
-checkjob $job >/dev/null 2>&1
-isjob=$?
+check_if_job $job
 
-if [ $isjob -ne 0 ]
+if [ "$1" == "t" ]
 then
-	echo "$job doesn't appear to be a job"
-	exit
-fi
-
-state=$(checkjob $job | awk '/^State/{print $2}')
-
-if [ $state != "Running" ]
-then
-	echo "$job is not yet running"
-	exit
-fi
-
-leadnode=$(checkjob -v $job | grep "Task Distribution" | awk -F, '{print $1}' | awk '{print $3}')
-
-if [ "$oe" == "t" ]
-then
+	check_if_running $job
+	leadnode=$(checkjob -v $job | grep "Task Distribution" | awk -F, '{print $1}' | awk '{print $3}')
 	ssh $leadnode "ls -l /tmp/${job}.*/"
-elif [ "$oe" == "m" ]
+elif [ "$1" == "m" ]
 then
+	check_if_running $job
+	leadnode=$(checkjob -v $job | grep "Task Distribution" | awk -F, '{print $1}' | awk '{print $3}')
 	ssh $leadnode "/usr/local/recluse/scripts/sbin/memory_used_by_job ${job}"
+elif [ "$1" == "o" ]
+then
+	check_if_running $job
+	leadnode=$(checkjob -v $job | grep "Task Distribution" | awk -F, '{print $1}' | awk '{print $3}')
+	ssh $leadnode "cat /usr/spool/PBS/spool/${job}.*.OU"
+elif [ "$1" == "e" ]
+then
+	check_if_running $job
+	leadnode=$(checkjob -v $job | grep "Task Distribution" | awk -F, '{print $1}' | awk '{print $3}')
+	ssh $leadnode "cat /usr/spool/PBS/spool/${job}.*.ER"
+elif [ "$1" == "p" ]
+then
+	if [ -e /usr/spool/PBS/server_priv/jobs/$job.*.SC ]
+	then
+		cat /usr/spool/PBS/server_priv/jobs/$job.*.SC
+	else
+		echo "Job doesn't exist, or is interactive"
+	fi
 else
-	ssh $leadnode "cat /usr/spool/PBS/spool/${job}.*.${oe}"
-fi
+	usage
+fi	
