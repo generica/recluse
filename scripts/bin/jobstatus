@@ -65,6 +65,7 @@ job=$2
 check_if_job $job
 check_if_running $job
 leadnode=$(qstat -f $job | awk 'BEGIN{ FS="[ /]+" }/exec_host/{ print $4 }')
+hashname=$(qstat -f $job | awk '/Job Id/{print $3}')
 
 if [ "$1" == "t" ]
 then
@@ -74,13 +75,13 @@ then
 	ssh $leadnode "/usr/local/recluse/scripts/sbin/memory_used_by_job ${job}"
 elif [ "$1" == "o" ]
 then
-	ssh $leadnode "cat /usr/spool/PBS/spool/${job}.*.OU"
+	ssh $leadnode "cat /usr/spool/PBS/spool/${hashname}.OU"
 elif [ "$1" == "e" ]
 then
-	ssh $leadnode "cat /usr/spool/PBS/spool/${job}.*.ER"
+	ssh $leadnode "cat /usr/spool/PBS/spool/${hashname}.ER"
 elif [ "$1" == "p" ]
 then
-	ssh $leadnode "cat /usr/spool/PBS/mom_priv/jobs/$job.*.SC"
+	ssh $leadnode "cat /usr/spool/PBS/mom_priv/jobs/${hashname}.SC"
 else
 	usage
 fi	
