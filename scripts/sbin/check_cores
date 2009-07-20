@@ -1,0 +1,43 @@
+#!/bin/env python
+
+# Written by Brett Pemberton (brett@vpac.org), Sam Morrison (sam@vpac.org)
+# Copyright (C) 2008 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import sys
+
+if __name__ == "__main__":
+
+    from subprocess import Popen, PIPE
+    proc = Popen(['/usr/local/recluse/scripts/bin/whatson', '-s'], stdout=PIPE, stderr=PIPE)
+    return_code = proc.wait()
+    if return_code == 0:
+        whatson = proc.stdout.readlines()
+    else:
+        print "ERROR: %s:\n%s" % (return_code, proc.stderr.read())
+        sys.exit(-1)
+
+    coresused = {}
+
+    for line in whatson:
+        ourline = line.split(None, 8)
+        if float(ourline[4]) > 10.0 or float(ourline[5]) > 10.0:
+            core = ourline[6]
+            if core in coresused:
+                print "core %s is already used -- [pid, user, mem, cpu, command]" % (core)
+                print "['%s','%s','%s','%s','%s']" % (ourline[1], ourline[4], ourline[5], ourline[6], ourline[8].rstrip('\n'))
+                print "['%s','%s','%s','%s','%s']" % (coresused[core][1], coresused[core][4], coresused[core][5], coresused[core][6], coresused[core][8].rstrip('\n'))
+            else:
+                coresused[core] = ourline

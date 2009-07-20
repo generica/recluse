@@ -1,0 +1,143 @@
+#!/bin/env python
+
+# assign_cores
+
+# for each 'active' process on the node, ensure each is assigned
+# to a proper cpuset, and core within that cpuset (if it has > 1 cores)
+
+# Written by Brett Pemberton (brett@vpac.org), Sam Morrison (sam@vpac.org)
+# Copyright (C) 2009 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import sys, os
+import getopt
+
+def usage():
+    print "usage: assign_cores [-c] [-v] [-x]"
+    print "   -c : check only, don't execute"
+    print "   -v : verbose mode"
+    print "   -x : extremely verbose mode"
+    sys.exit(0)
+
+if __name__ == "__main__":
+
+    check_only = False
+    verbose = False
+    very_verbose = False
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "cvx")
+    except getopt.GetoptError, err:
+        # print help information and exit:
+        print str(err) # will print something like "option -a not recognized"
+        usage()
+        sys.exit(2)
+
+    opts = dict(opts)
+
+    if '-c' in opts:
+        check_only = True
+
+    if '-v' in opts:
+        verbose = True
+
+    if '-x' in opts:
+        very_verbose = True
+
+    from subprocess import Popen, PIPE
+    proc = Popen(['/usr/local/recluse/scripts/bin/whatson', '-s'], stdout=PIPE, stderr=PIPE)
+    return_code = proc.wait()
+    if return_code == 0:
+        whatson = proc.stdout.readlines()
+    else:
+        print "ERROR: %s:\n%s" % (return_code, proc.stderr.read())
+        sys.exit(-1)
+
+    for line in whatson:
+        ourline = line.split(None, 8)
+
+        # only check processes using over 10% of ram or cpu
+        # arbitrary numbers
+
+        if float(ourline[4]) > 10.0 or float(ourline[5]) > 10.0:
+            proc = ourline[0]
+            proc_cpuset = '/proc/' + proc + '/cpuset'
+
+            # check if the process is still around
+            # if so, see what cpuset it belongs to
+
+            if not os.path.isfile(proc_cpuset):
+                continue
+            cpuset = open(proc_cpuset, 'r').read().rstrip()
+            if very_verbose:
+                print "proc: %s, cpuset: %s" % (proc, cpuset)
+
+            # check how many cores this cpuset has
+            # if just one, then ignore
+
+            cpus_file = '/dev/cpuset' + cpuset + '/cpus'
+            if not os.path.isfile(cpus_file):
+                continue
+            cpus = open(cpus_file, 'r').read().rstrip()
+            if len(cpus) == 1:
+                if very_verbose:
+                    print "proc: %s cpuset cpus: %s" % (proc, cpus)
+                    print "single cpu allocated, ignoring"
+                continue
+
+            # make sure it is a torque job
+
+            if not cpuset.startswith('/torque'):
+                if very_verbose:
+                    print "proc: %s is not in a torque cpuset" % (proc)
+                continue
+
+            # if the last digit is a number, then it has already been fine-grain assigned
+            # if not, we must do it now
+
+            if cpuset[-1].isdigit():
+                if very_verbose:
+                    print "proc: %s is already in a torque cpuset" % (proc)
+                continue
+
+            print "proc: %s is not in a cpuset" % (proc)
+
+            # check all cores in the cpuset
+
+            filelist = os.listdir('/dev/cpuset/' + cpuset)
+            assigned = False
+            for dir in filelist:
+                if os.path.isdir('/dev/cpuset' + cpuset + '/' + dir):
+                    tasksfile = '/dev/cpuset' + cpuset + '/' + dir + '/tasks'
+                    if not os.path.isfile(tasksfile):
+                        break
+                    tasks = open(tasksfile, 'r').read().rstrip()
+
+                    # does this core already have a task?
+                    # if not, assign it to the current process
+
+                    if not tasks.isdigit():
+                        print "solution: echo %s > %s" % (proc, tasksfile)
+                        if not check_only:
+                            tfile = open(tasksfile, 'w')
+                            tfile.write(proc)
+                            tfile.close()
+                        assigned = True
+                        break
+
+            # cpuset has too many processes
+
+            if not assigned:
+                print "ERROR: we ran out of cores for proc: %s" % (proc)

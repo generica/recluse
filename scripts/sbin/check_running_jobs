@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# check_running_jobs
+
+# node-local version of nodechecker, to make sure all processes on the node belong to jobs
+
+# Written by Brett Pemberton, brett@vpac.org
+# Copyright (C) 2009 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or   
+# (at your option) any later version.                                 
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of 
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the  
+# GNU General Public License for more details.                   
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+mom=$(pidof pbs_mom)
+
+if [ -z "$mom" ]
+then
+	exit
+fi
+
+expected=$(mktemp)
+running=$(mktemp)
+
+for job in $(momctl -d9 | awk 'BEGIN{FS="[ \\[\\]]+"}/state=RUNNING/{print $2}'); do user=$(qstat -f $job | awk 'BEGIN{FS="[ @]+"}/Job_Owner/{print $4}'); echo $user; done | sort | uniq > $expected
+whosonnode | sort > $running
+
+diff_pos=$(diff -u $expected $running | egrep "^\+[a-z]" | sed 's/+//')
+diff_neg=$(diff -u $expected $running | egrep "^-[a-z]" | sed 's/-//')
+
+if [ ! -z "$diff_pos" ]
+then
+	echo "pos: $diff_pos"
+fi
+if [ ! -z "$diff_neg" ]
+then
+	echo "neg: $diff_neg"
+fi
+
+rm -f $expected $running
