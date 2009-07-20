@@ -84,19 +84,6 @@ if __name__ == "__main__":
             if very_verbose:
                 print "proc: %s, cpuset: %s" % (proc, cpuset)
 
-            # check how many cores this cpuset has
-            # if just one, then ignore
-
-            cpus_file = '/dev/cpuset' + cpuset + '/cpus'
-            if not os.path.isfile(cpus_file):
-                continue
-            cpus = open(cpus_file, 'r').read().rstrip()
-            if len(cpus) == 1:
-                if very_verbose:
-                    print "proc: %s cpuset cpus: %s" % (proc, cpus)
-                    print "single cpu allocated, ignoring"
-                continue
-
             # make sure it is a torque job
 
             if not cpuset.startswith('/torque'):
@@ -110,6 +97,19 @@ if __name__ == "__main__":
             if cpuset[-1].isdigit():
                 if very_verbose:
                     print "proc: %s is already in a torque cpuset" % (proc)
+                continue
+
+            # check how many cores this cpuset has
+            # if just one, then ignore
+
+            cpus_file = '/dev/cpuset' + cpuset + '/cpus'
+            if not os.path.isfile(cpus_file):
+                continue
+            cpus = open(cpus_file, 'r').read().rstrip()
+            if len(cpus) == 1:
+                if very_verbose:
+                    print "proc: %s cpuset cpus: %s" % (proc, cpus)
+                    print "single cpu allocated, ignoring"
                 continue
 
             print "proc: %s is not in a cpuset" % (proc)

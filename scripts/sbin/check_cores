@@ -36,8 +36,8 @@ if __name__ == "__main__":
         if float(ourline[4]) > 10.0 or float(ourline[5]) > 10.0:
             core = ourline[6]
             if core in coresused:
-                print "core %s is already used -- [pid, user, mem, cpu, command]" % (core)
-                print "['%s','%s','%s','%s','%s']" % (ourline[1], ourline[4], ourline[5], ourline[6], ourline[8].rstrip('\n'))
-                print "['%s','%s','%s','%s','%s']" % (coresused[core][1], coresused[core][4], coresused[core][5], coresused[core][6], coresused[core][8].rstrip('\n'))
+                print "core %s is already used -- [pid, user, mem, cpu, core, command]" % (core)
+                print "['%s','%s','%s','%s','%s','%s']" % (ourline[0], ourline[1], ourline[4], ourline[5], ourline[6], ourline[8].rstrip('\n'))
+                print "['%s','%s','%s','%s','%s','%s']" % (coresused[core][0], coresused[core][1], coresused[core][4], coresused[core][5], coresused[core][6], coresused[core][8].rstrip('\n'))
             else:
                 coresused[core] = ourline
