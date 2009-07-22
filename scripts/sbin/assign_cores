@@ -39,7 +39,7 @@ if __name__ == "__main__":
     verbose = False
     very_verbose = False
     force = False
-    user = False
+    only_user = False
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "cvxfu:")
@@ -55,7 +55,7 @@ if __name__ == "__main__":
         check_only = True
 
     if '-u' in opts:
-        user = opts['-u']
+        only_user = opts['-u']
 
     if '-f' in opts:
         force = True
@@ -83,9 +83,10 @@ if __name__ == "__main__":
 
         if float(ourline[4]) > 10.0 or float(ourline[5]) > 10.0:
             proc = ourline[0]
+            user = ourline[1]
             proc_cpuset = '/proc/' + proc + '/cpuset'
 
-            if user != False and user != ourline[1]:
+            if user != False and only_user != user:
                 if very_verbose:
                     print "Excluding proc: %s because of ownership" % (proc)
                 continue
@@ -97,13 +98,13 @@ if __name__ == "__main__":
                 continue
             cpuset = open(proc_cpuset, 'r').read().rstrip()
             if very_verbose:
-                print "proc: %s, cpuset: %s" % (proc, cpuset)
+                print "proc: %s, user: %s, cpuset: %s" % (proc, user, cpuset)
 
             # make sure it is a torque job
 
             if not cpuset.startswith('/torque'):
                 if very_verbose:
-                    print "proc: %s is not in a torque cpuset" % (proc)
+                    print "proc: %s (%s) is not in a torque cpuset" % (proc, user)
                 continue
 
             # if the last digit is a number, then it has already been fine-grain assigned
@@ -111,7 +112,7 @@ if __name__ == "__main__":
 
             if cpuset[-1].isdigit():
                 if very_verbose:
-                    print "proc: %s is already in a torque cpuset" % (proc)
+                    print "proc: %s (%s) is already in a torque cpuset" % (proc, user)
                 continue
 
             # check how many cores this cpuset has
@@ -123,11 +124,11 @@ if __name__ == "__main__":
             cpus = open(cpus_file, 'r').read().rstrip()
             if len(cpus) == 1 and not force:
                 if very_verbose:
-                    print "proc: %s cpuset cpus: %s" % (proc, cpus)
+                    print "proc: %s, user: %s, cpuset cpus: %s" % (proc, user, cpus)
                     print "single cpu allocated, ignoring"
                 continue
 
-            print "proc: %s is not in a cpuset" % (proc)
+            print "proc: %s (%s) is not in a cpuset" % (proc, user)
 
             # check all cores in the cpuset
 
@@ -144,7 +145,7 @@ if __name__ == "__main__":
                     # if not, assign it to the current process
 
                     if not tasks.isdigit():
-                        print "solution: echo %s > %s" % (proc, tasksfile)
+                        print "solution for %s: echo %s > %s" % (user, proc, tasksfile)
                         if not check_only:
                             tfile = open(tasksfile, 'w')
                             tfile.write(proc)
@@ -155,4 +156,4 @@ if __name__ == "__main__":
             # cpuset has too many processes
 
             if not assigned:
-                print "ERROR: we ran out of cores for proc: %s" % (proc)
+                print "ERROR: we ran out of cores for proc: %s (%s)" % (proc, user)
