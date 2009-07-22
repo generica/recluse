@@ -25,8 +25,10 @@ import sys, os
 import getopt
 
 def usage():
-    print "usage: assign_cores [-c] [-v] [-x]"
+    print "usage: assign_cores [-c] [-f] [-v] [-x] [-u <user>]"
+    print "   -f : force assign (even single cpu jobs)"
     print "   -c : check only, don't execute"
+    print "   -u <user> : only assign user's tasks"
     print "   -v : verbose mode"
     print "   -x : extremely verbose mode"
     sys.exit(0)
@@ -36,9 +38,11 @@ if __name__ == "__main__":
     check_only = False
     verbose = False
     very_verbose = False
+    force = False
+    user = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "cvx")
+        opts, args = getopt.getopt(sys.argv[1:], "cvxfu:")
     except getopt.GetoptError, err:
         # print help information and exit:
         print str(err) # will print something like "option -a not recognized"
@@ -49,6 +53,12 @@ if __name__ == "__main__":
 
     if '-c' in opts:
         check_only = True
+
+    if '-u' in opts:
+        user = opts['-u']
+
+    if '-f' in opts:
+        force = True
 
     if '-v' in opts:
         verbose = True
@@ -75,6 +85,11 @@ if __name__ == "__main__":
             proc = ourline[0]
             proc_cpuset = '/proc/' + proc + '/cpuset'
 
+            if user != False and user != ourline[1]:
+                if very_verbose:
+                    print "Excluding proc: %s because of ownership" % (proc)
+                continue
+
             # check if the process is still around
             # if so, see what cpuset it belongs to
 
@@ -100,13 +115,13 @@ if __name__ == "__main__":
                 continue
 
             # check how many cores this cpuset has
-            # if just one, then ignore
+            # if just one, then ignore, unless forced
 
             cpus_file = '/dev/cpuset' + cpuset + '/cpus'
             if not os.path.isfile(cpus_file):
                 continue
             cpus = open(cpus_file, 'r').read().rstrip()
-            if len(cpus) == 1:
+            if len(cpus) == 1 and not force:
                 if very_verbose:
                     print "proc: %s cpuset cpus: %s" % (proc, cpus)
                     print "single cpu allocated, ignoring"
