@@ -157,3 +157,5 @@ else
 		echo -e "running job list was: \n$running_job_list"
 	fi
 fi
+
+/usr/local/recluse/scripts/sbin/create_torque_cfg
