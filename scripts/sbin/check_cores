@@ -18,6 +18,22 @@
 
 import sys
 
+# minimum levels to consider a process
+min_mem = 10.0
+min_cpu = 10.0
+
+def print_process(process):
+
+    proc = process[0]
+    user = process[1]
+    mem = process[2]
+    cpu = process[3]
+    core = process[4]
+    command = process[5]
+
+    print "['%s','%s','%s','%s','%s','%s']" % (proc, user, mem, cpu, core, command)
+
+
 if __name__ == "__main__":
 
     from subprocess import Popen, PIPE
@@ -29,15 +45,41 @@ if __name__ == "__main__":
         print "ERROR: %s:\n%s" % (return_code, proc.stderr.read())
         sys.exit(-1)
 
-    coresused = {}
+    maxcores = 0
+    corecount = {}
+    corelist = {}
 
     for line in whatson:
         ourline = line.split(None, 8)
-        if float(ourline[4]) > 10.0 or float(ourline[5]) > 10.0:
-            core = ourline[6]
-            if core in coresused:
-                print "core %s is already used -- [pid, user, mem, cpu, core, command]" % (core)
-                print "['%s','%s','%s','%s','%s','%s']" % (ourline[0], ourline[1], ourline[4], ourline[5], ourline[6], ourline[8].rstrip('\n'))
-                print "['%s','%s','%s','%s','%s','%s']" % (coresused[core][0], coresused[core][1], coresused[core][4], coresused[core][5], coresused[core][6], coresused[core][8].rstrip('\n'))
+
+        proc = ourline[0]
+        user = ourline[1]
+        mem = ourline[4]
+        cpu = ourline[5]
+        core = ourline[6]
+        command = ourline[8].rstrip('\n')
+
+        if float(mem) > min_mem or float(cpu) > min_cpu:
+            if core > maxcores:
+                maxcores = core
+
+            if core in corecount:
+                corecount[core] = corecount[core] + 1
             else:
-                coresused[core] = ourline
+                corecount[core] = 1
+
+            current_corecount = corecount[core]
+
+            if current_corecount == 1:
+                corelist[core] = {}
+            corelist[core][current_corecount] = (proc, user, mem, cpu, core, command)
+
+    for core in range(0, int(maxcores) + 1):
+        if str(core) in corecount:
+            core_processes = corecount[str(core)]
+
+            if core_processes > 1:
+                print "core %s has %s processes" % (core, core_processes)
+
+                for process in range(1, int(core_processes) + 1):
+                    print_process(corelist[str(core)][process])

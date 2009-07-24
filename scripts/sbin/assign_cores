@@ -24,6 +24,10 @@
 import sys, os
 import getopt
 
+# minimum levels to count a process
+min_mem = 10.0
+min_cpu = 10.0
+
 def usage():
     print "usage: assign_cores [-c] [-f] [-v] [-x] [-u <user>]"
     print "   -f : force assign (even single cpu jobs)"
@@ -78,17 +82,20 @@ if __name__ == "__main__":
     for line in whatson:
         ourline = line.split(None, 8)
 
+        proc = ourline[0]
+        user = ourline[1]
+        mem = ourline[4]
+        cpu = ourline[5]
+
         # only check processes using over 10% of ram or cpu
         # arbitrary numbers
 
-        if float(ourline[4]) > 10.0 or float(ourline[5]) > 10.0:
-            proc = ourline[0]
-            user = ourline[1]
+        if float(mem) > min_mem or float(cpu) > min_cpu:
             proc_cpuset = '/proc/' + proc + '/cpuset'
 
-            if user != False and only_user != user:
+            if only_user != False and only_user != user:
                 if very_verbose:
-                    print "Excluding proc: %s because of ownership" % (proc)
+                    print "Excluding proc: %s (%s) because of ownership rule (%s)" % (proc, user, only_user)
                 continue
 
             # check if the process is still around
