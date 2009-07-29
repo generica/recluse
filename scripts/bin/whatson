@@ -21,6 +21,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# DO NOT change formatting here without also amending check_cores and assign_cores
+
 nh=""
 
 if [ "$1" == "-s" ]
@@ -28,4 +30,4 @@ then
 	nh="--no-headers"
 fi
 
-/bin/ps ax $nh -o pid,user:20,cputime,etime,pmem,pcpu,wchan:15,cmd | awk '{if ($2 != "root" && $2 != "rpc" && $2 != "rpcuser" && $2 != "ntp" && $2 != "xfs" && $2 != "dbus" && $2 != "ganglia" && $2 != "haldaemon" && $2 != "smmsp" && $2 != "avahi" && $2 != "postfix" && $2 != "bin" && $2 != "daemon" && $2 != "nobody" && $2 != "sshd" ) { print $0 } }'
+/bin/ps ax $nh -o pid,user:20,cputime,etime,pmem,pcpu,psr,wchan:15,cmd | awk '{if ($2 != "root" && $2 != "rpc" && $2 != "rpcuser" && $2 != "ntp" && $2 != "xfs" && $2 != "dbus" && $2 != "ganglia" && $2 != "haldaemon" && $2 != "smmsp" && $2 != "avahi" && $2 != "postfix" && $2 != "bin" && $2 != "daemon" && $2 != "nobody" && $2 != "sshd" ) { print $0 } }'
