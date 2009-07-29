@@ -61,7 +61,11 @@ count=0
 count=`egrep DIMM[0-9] /var/log/mcelog | sort | uniq -c | egrep -c "^ *[$allowed_per_dimm-9]|^ *[1-9][0-9]"`
 
 if [ "$count" -gt 0 ]; then
-	echo "ERROR ECC: $count DIMM(s) with $allowed_per_dimm or more errors (DEEP)"
+	if [ "$count" -eq 1 ]; then
+		echo "ERROR ECC: $count DIMM with $allowed_per_dimm or more errors (DEEP)"
+	else
+		echo "ERROR ECC: $count DIMMs with $allowed_per_dimm or more errors (DEEP)"
+	fi
 	status=1
 fi
 
@@ -74,7 +78,11 @@ count=0
 count=`egrep DIMM[0-9] /var/log/mcelog | sort | uniq -c | egrep -c "^ *[$allowed_ecc_dimm_threshold-9]|^ *[1-9][0-9]"`
 
 if [ "$count" -gt "$allowed_dimms_with_ecc" ]; then
-	echo "ERROR ECC: $count DIMM(s) with $allowed_ecc_dimm_threshold or more errors (WIDE)"
+	if [ "$count" -eq 1 ]; then
+		echo "ERROR ECC: $count DIMM with $allowed_ecc_dimm_threshold or more errors (WIDE)"
+	else
+		echo "ERROR ECC: $count DIMMs with $allowed_ecc_dimm_threshold or more errors (WIDE)"
+	fi
 	status=1
 fi
 
