@@ -44,6 +44,7 @@ if __name__ == "__main__":
     very_verbose = False
     force = False
     only_user = False
+    user_list = set()
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "cvxfu:")
@@ -53,22 +54,23 @@ if __name__ == "__main__":
         usage()
         sys.exit(2)
 
-    opts = dict(opts)
+    for opt in opts:
 
-    if '-c' in opts:
-        check_only = True
+       if '-c' in opt:
+           check_only = True
 
-    if '-u' in opts:
-        only_user = opts['-u']
+       if '-u' in opt:
+           only_user = True
+           user_list.add(opt[1])
 
-    if '-f' in opts:
-        force = True
+       if '-f' in opt:
+           force = True
 
-    if '-v' in opts:
-        verbose = True
+       if '-v' in opt:
+           verbose = True
 
-    if '-x' in opts:
-        very_verbose = True
+       if '-x' in opt:
+           very_verbose = True
 
     from subprocess import Popen, PIPE
     proc = Popen(['/usr/local/recluse/scripts/bin/whatson', '-s'], stdout=PIPE, stderr=PIPE)
@@ -93,9 +95,9 @@ if __name__ == "__main__":
         if float(mem) > min_mem or float(cpu) > min_cpu:
             proc_cpuset = '/proc/' + proc + '/cpuset'
 
-            if only_user != False and only_user != user:
+            if only_user == True and user not in user_list:
                 if very_verbose:
-                    print "Excluding proc: %s (%s) because of ownership rule (%s)" % (proc, user, only_user)
+                    print "Excluding proc: %s (%s) because of ownership rule (%s)" % (proc, user, user_list)
                 continue
 
             # check if the process is still around
