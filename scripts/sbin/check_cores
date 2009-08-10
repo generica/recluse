@@ -17,10 +17,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
+import getopt
 
 # minimum levels to consider a process
 min_mem = 10.0
 min_cpu = 10.0
+
+def usage():
+    print "usage: check_cores [-x <user>]"
+    print "   -x <user> : excluse this user's tasks"
+    sys.exit(0)
 
 def print_process(process):
 
@@ -35,6 +41,21 @@ def print_process(process):
 
 
 if __name__ == "__main__":
+
+    exclude_user_list = set()
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "x:")
+    except getopt.GetoptError, err:
+        # print help information and exit:
+        print str(err) # will print something like "option -a not recognized"
+        usage()
+        sys.exit(2)
+
+    for opt in opts:
+
+       if '-x' in opt:
+           exclude_user_list.add(opt[1])
 
     from subprocess import Popen, PIPE
     proc = Popen(['/usr/local/recluse/scripts/bin/whatson', '-s'], stdout=PIPE, stderr=PIPE)
@@ -58,6 +79,9 @@ if __name__ == "__main__":
         cpu = ourline[5]
         core = ourline[6]
         command = ourline[8].rstrip('\n')
+
+        if user in exclude_user_list:
+            continue
 
         if float(mem) > min_mem or float(cpu) > min_cpu:
             if core > maxcores:
