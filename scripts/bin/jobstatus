@@ -22,12 +22,13 @@
 
 function usage {
 
-	echo "usage: $0 <o|e|p|t|m> <job number>"
+	echo "usage: $0 <o|e|p|t|m|r> <job number>"
 	echo "       show [o]utput"
         echo "            [e]rror"
         echo "            [p]bs-script for a job"
         echo "            [t]mpdir for a job"
         echo "            [m]memory usage for a job"
+        echo "            [r]running processes for a job"
 	exit
 }
 
@@ -82,6 +83,9 @@ then
 elif [ "$1" == "p" ]
 then
 	ssh $leadnode "cat /usr/spool/PBS/mom_priv/jobs/${hashname}.SC"
+elif [ "$1" == "r" ]
+then
+	ssh $leadnode "ps axu | egrep -f /dev/cpuset/torque/${hashname}/tasks"
 else
 	usage
 fi	
