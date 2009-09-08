@@ -40,9 +40,9 @@ fi
 job=$1
 hours=$2
 
-echo "will extend job $job by $hours hours"
+hours_check=$(echo $hours | egrep -vc "^[0-9]*$")
 
-if [ ! $hours -gt 0 ]
+if [ $hours_check -ne 0 ]
 then
 	echo "ERROR: $hours is not a non-zero number"
 	exit 1
@@ -59,6 +59,7 @@ fi
 walltime=$(qstat -f $job | grep Resource_List.walltime | awk '{print $3}')
 new_walltime=$(echo $walltime | awk -v h=$hours -F: '{print $1+h ":" $2 ":" $3}')
 
+echo "will extend job $job by $hours hours"
 echo "old walltime: $walltime"
 echo "new walltime: $new_walltime"
 
