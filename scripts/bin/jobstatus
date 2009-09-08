@@ -66,7 +66,7 @@ job=$2
 check_if_job $job
 check_if_running $job
 leadnode=$(qstat -f $job | awk 'BEGIN{ FS="[ /]+" }/exec_host/{ print $4 }')
-hashname=$(qstat -f $job | awk '/Job Id/{print $3}' | sed -e 's/edda-m.vpac.org/edda/' -e 's/wexstan.vpac.org/wexs/')
+hashname=$(qstat -f $job | awk '/Job Id/{print $3}' | sed -e 's/edda-m.vpac.org/edda/')
 
 if [ "$1" == "t" ]
 then
