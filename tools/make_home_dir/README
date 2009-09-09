@@ -1,0 +1,62 @@
+(c) Copyright 2003 - trustsec IT solutions GmbH
+
+
+make_home_dir:
+--------------
+
+make_home_dir is a small program, that creates the home-directory of
+the calling user, if it does not exists.
+This is useful for machines, where you want to create home-directorys
+in the moment, where users want to login.
+Normally you would use the PAM module pam_mkhomedir, but since version 3.6
+of SSH, a new security model, called privilege separation is used, while
+authenticating a user. pam_mkhomedir can not work with privilege violation,
+because in this phase, SSH is in a chrooted environment.
+
+To get around this, I created this small program.
+It can be called by any user and will only create the home-directory of
+the calling user. To do that, make_home_dir has only to run under a privileged
+GID, that has write-permission to the parent-directory of the home-directory.
+
+
+INSTALLATION:
+-------------
+
+Do the following, to setup your system:
+add a group named 'home' (home is only a recommendation, you can use any
+group-name you want to):
+    $ groupadd home
+Now make the parent of the home-directories writeable to this group:
+(in this example /home)
+    $ chgrp home /home
+    $ chmod g+w /home
+
+Install the make_home_dir:
+    $ make
+    $ make install
+
+Put the call in /etc/profile (or /etc/login for csh,tcsh)
+A better place would be /etc/profile.d/makehomedir, if your
+distribution supports /etc/profile.d/
+Example for bash, ksh, ash, sh:
+    if [ ! -d $HOME ]
+    then
+	logger Creating new home-directory $HOME
+        /usr/local/sbin/make_home_dir
+	cd $HOME
+	cp -a /etc/skel/. $HOME/.
+	echo Home directory created
+    fi
+
+
+LATEST VERSION:
+---------------
+
+You can obtain the latest version of make_home_dir from:
+http://www.trustsec.de/soft/oss/
+
+-- 
+Wed Aug 20 16:00:38 CEST 2003
+Frank Kirschner <kirschner@trustsec.de>
+http://www.trustsec.de/
+
