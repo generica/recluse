@@ -38,16 +38,8 @@ Install the make_home_dir:
 Put the call in /etc/profile (or /etc/login for csh,tcsh)
 A better place would be /etc/profile.d/makehomedir, if your
 distribution supports /etc/profile.d/
-Example for bash, ksh, ash, sh:
-    if [ ! -d $HOME ]
-    then
-	logger Creating new home-directory $HOME
-        /usr/local/sbin/make_home_dir
-	cd $HOME
-	cp -a /etc/skel/. $HOME/.
-	echo Home directory created
-    fi
 
+Examples in profile.d directory
 
 LATEST VERSION:
 ---------------
