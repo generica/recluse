@@ -41,11 +41,9 @@ int create_real_link(char *realhome, char *home) {
 	ret = symlink(realhome, home);
 
 	if (ret) {
-	    snprintf(errormsg, 2048,
-		     "Failed to make link from %s to %s, please report to help@vpac.org",
-		     home, realhome);
-	    perror(errormsg);
-	    exit(-1);
+		snprintf(errormsg, 2048, "Failed to make link from %s to %s, please report to help@vpac.org", home, realhome);
+		perror(errormsg);
+		exit(-1);
 	}
 
 	return 0;
