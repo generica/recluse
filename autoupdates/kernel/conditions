@@ -9,7 +9,7 @@ else
 	KERNELDIR="/usr/local/recluse/centos/$centosversion/kernel"
 fi
 
-mostrecent=$(basename $KERNELDIR/latest/*.rpm  | awk -F\- '{print $2}')
+mostrecent=$(basename $KERNELDIR/latest/*.rpm  | sed 's/.x86_64.rpm//')
 
 installed=$(rpm -q "kernel-$mostrecent")
 
