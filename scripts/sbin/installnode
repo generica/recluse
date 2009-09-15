@@ -1,12 +1,12 @@
-#!/bin/bash
+#!/bin/env python
 
 # installnode
-#
-# set up config so that a node can be rebooted
-# and installed with an operating system
-#
-# Written by Brett Pemberton, brett@vpac.org
-# Copyright (C) 2004 Victorian Partnership for Advanced Computing
+
+# 
+# 
+
+# Written by Brett Pemberton (brett@vpac.org)
+# Copyright (C) 2009 Victorian Partnership for Advanced Computing
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,61 +21,205 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-versions=$(for file in /tftpboot/pxelinux.cfg/install.*; do basename $file | awk -F"install." '{print $2}'; done)
+import sys, os
+import getopt
+import re
+import time
 
-if [ $# -ne 2 ]
-then
-	echo "$0 <node name> <install version>"
-	echo
-	echo "where install version is one of:"
-	echo $versions
-	exit 1
-fi
+pxebase = '/tftpboot/pxelinux.cfg'
 
-node=$1
-version=$2
+def usage():
+    print "usage: installnode [-l] | -n node -t target"
+    print "   -n : hostname of node to install"
+    print "   -t : target install type"
+    print "   -l : list valid target install types"
+    sys.exit(0)
 
-if [ ! -f /tftpboot/pxelinux.cfg/install.$version ]
-then
-	echo "Version $version is not installable"
-	echo "{file /tftpboot/pxelinux.cfg/install.$version does not exist}"
-	echo "possible install versions are:"
-	echo $versions
-	exit 1
-fi
+def valid_nodes(node_list):
+    error_nodes = set()
+    d = open('/etc/dhcpd.conf', 'r')
+    dhcp = d.readlines()
+    d.close()
+    for node in node_list:
+        match = False
+        for line in dhcp:
+            if re.search('^host ' + node + ' {', line):
+                match = True
+        if match == False:
+            error_nodes.add(node)
+    return error_nodes
 
-ipaddr=$(egrep -w "$node" /etc/hosts | grep -v "${node}-" | awk '{print $1}')
+def get_valid_targets():
+    target_list = set()
+    filelist = os.listdir(pxebase)
+    for file in filelist:
+        if file.startswith('install.'):
+            target_list.add(re.sub('^install.', '', file))
+    return target_list
 
-if [ -z $ipaddr ]
-then
-	echo "Node $node does not resolve"
-	echo "Please add it to /etc/hosts, and try again"
-	exit 1
-fi
+def valid_target(target):
+    target_list = get_valid_targets()
+    if target in target_list:
+        return True
+    else:
+        return False
 
-if [ `grep -c -w "$ipaddr" /etc/dhcpd.conf` -eq 0 ]
-then
-	echo "Node $node is not in /etc/dhcpd.conf"
-	echo "Add it with a static ip, and try again"
-	exit 1
-fi
+def print_valid_targets():
+    print "Valid install targets:",
+    target_list = get_valid_targets()
+    for target in target_list:
+       print target,
+    print
 
-echo "Installing node $node [$ipaddr] with version $version"
+def convert_ip_to_hex(ip):
 
-setboot $node install.$version
+    ip_regex = re.compile('(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.' \
+                      '(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.' \
+                      '(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.' \
+                      '(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)')
+    ip_match = ip_regex.match(ip)
 
-echo "..."
-echo "Set up completed.  Please reboot node: $node"
-echo "..."
+    if (ip_match == None):
+        print "Invalid address"
+        sys.exit(1)
 
-while [ `tail -n 10 /var/log/messages | grep -c "DHCPOFFER on $ipaddr"` -eq 0 ]
-do
-	sleep 1
-done
+    hex_ip_addr = 0
 
-echo "Node has been rebooted, install in progress"
+    for i in range(1,5):
+        hex_ip_addr += int(ip_match.group(i)) << (4-i)*8
 
-sleep 10
+    fmt = "%%0%dX" % ((32) / 4)
+    return fmt % (hex_ip_addr >> 0)
 
-setboot $node localboot
+def node_to_ip(node):
+    h = open('/etc/hosts', 'r')
+    hosts = h.readlines()
+    h.close()
+
+    for line in hosts:
+        l = line.split()
+        if node in l:
+            return l[0]
+
+    print "ERROR: couldn't find node %s in /etc/hosts" % (node)
+    sys.exit(-1)
+
+def ip_to_node(ip):
+    d = open('/etc/dhcpd.conf', 'r')
+    dhcp = d.readlines()
+    d.close()
+
+    prev = ""
+    prev2 = ""
+
+    for line in dhcp:
+        if line.find('fixed-address ' + ip + ';') > -1:
+            return prev2.split()[1]
+        else:
+            prev2 = prev
+            prev = line
+
+    print "ERROR: couldn't find ip address %s in /etc/dhcpd.conf" % (ip)
+    sys.exit(-1)
+
+def set_boot(node, target):
+    node_ip = node_to_ip(node)
+    node_hex = convert_ip_to_hex(node_ip)
+
+    if os.path.islink(os.path.join(pxebase, node_hex)):
+        os.remove(os.path.join(pxebase, node_hex))
+
+    if target != "localboot":
+        target = 'install.' + target
+    os.symlink(target, os.path.join(pxebase, node_hex))
+
+if __name__ == "__main__":
+
+    target = False
+    node_list = set()
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "t:n:l")
+    except getopt.GetoptError, err:
+        # print help information and exit:
+        print str(err) # will print something like "option -a not recognized"
+        usage()
+        sys.exit(2)
+
+    for opt in opts:
+
+       if '-t' in opt:
+           target = opt[1]
+
+       if '-n' in opt:
+           node_list.add(opt[1])
+
+       if '-l' in opt:
+           print_valid_targets()
+           sys.exit(0)
+
+    if not (target and len(node_list) > 0):
+        usage()
+
+    if not valid_target(target):
+        print "ERROR: target %s is not valid" % (target)
+        print_valid_targets()
+        sys.exit(-1)
+
+    error_nodes = valid_nodes(node_list)
+    if len(error_nodes) > 0:
+        print "ERROR: these nodes are not valid:",
+        for node in error_nodes:
+            print node,
+        sys.exit(-1)
+
+    print "target image: %s will be installed to nodes:" % (target),
+    for node in node_list:
+        print node,
+    print
+
+    for node in node_list:
+        set_boot(node, target)
+
+    print "Install prepared, please reboot nodes"
+
+    current_position = 0
+
+    log = open('/var/log/messages', 'r')
+    log.seek(0, 2)
+
+    partial = ""
+    to_install_list = node_list
+
+    while len(to_install_list) > 0:
+        line = log.readline()
+        if current_position != log.tell() and len(line) > 0:
+            last_char = ord(line[-1])
+            if last_char != 10:
+                partial = line
+                continue
+            else:
+                line = partial + line
+                partial = ""
+                if re.search("RRQ from .* filename pxelinux.0", line):
+                    node_ip = line.split()[7]
+                    node_installed = ip_to_node(node_ip)
+                    if node_installed in to_install_list:
+                        to_install_list.remove(node_installed)
+                        time.sleep(2)
+                        set_boot(node, "localboot")
+                        print "node: %s has been installed" % (node_installed)
+                        if len(to_install_list) > 0:
+                            print "nodes remaining:",
+                            for n in to_install_list:
+                                print n,
+                            print
+                        else:
+                            print "All nodes installing"
+                            log.close()
+                            sys.exit(0)
+                current_position = log.tell()
+                time.sleep(1)
+
+    log.close()
 
