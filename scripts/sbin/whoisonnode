@@ -51,7 +51,7 @@ do
 	else
 		email=""
 	fi
-	coresonnode=$(checkjob $job | grep $node | head -n1 | awk -F"$node" '{print $2}' | awk -F']' '{print $1}' | awk -F: '{print $2}')
+	coresonnode=$(checkjob $job | grep $node: | head -n1 | awk -F"$node" '{print $2}' | awk -F']' '{print $1}' | awk -F: '{print $2}')
 	corestotal=$(checkjob $job | grep "Total Requested Tasks:" | awk '{print $4}')
 	if [ $printemail -eq 1 ]
 	then
