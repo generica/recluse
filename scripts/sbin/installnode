@@ -2,8 +2,8 @@
 
 # installnode
 
-# 
-# 
+# set up config so that a node can be rebooted
+# and installed with an operating system
 
 # Written by Brett Pemberton (brett@vpac.org)
 # Copyright (C) 2009 Victorian Partnership for Advanced Computing
@@ -29,8 +29,9 @@ import time
 pxebase = '/tftpboot/pxelinux.cfg'
 
 def usage():
-    print "usage: installnode [-l] | -n node -t target"
+    print "usage: installnode [-l] | < -n node | -f nodefile > -t target"
     print "   -n : hostname of node to install"
+    print "   -f : file containing hostnames of node to install"
     print "   -t : target install type"
     print "   -l : list valid target install types"
     sys.exit(0)
@@ -139,7 +140,7 @@ if __name__ == "__main__":
     node_list = set()
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "t:n:l")
+        opts, args = getopt.getopt(sys.argv[1:], "f:t:n:l")
     except getopt.GetoptError, err:
         # print help information and exit:
         print str(err) # will print something like "option -a not recognized"
@@ -150,6 +151,16 @@ if __name__ == "__main__":
 
        if '-t' in opt:
            target = opt[1]
+
+       if '-f' in opt:
+           if not os.path.isfile(opt[1]):
+               print "ERROR: file %s is not readable" % (opt[1])
+               sys.exit(-1)
+           f = open(opt[1], 'r')
+           nodefile = f.readlines()
+           f.close()
+           for node in nodefile:
+               node_list.add(node.strip())
 
        if '-n' in opt:
            node_list.add(opt[1])
@@ -171,6 +182,7 @@ if __name__ == "__main__":
         print "ERROR: these nodes are not valid:",
         for node in error_nodes:
             print node,
+        print
         sys.exit(-1)
 
     print "target image: %s will be installed to nodes:" % (target),
@@ -207,7 +219,7 @@ if __name__ == "__main__":
                     if node_installed in to_install_list:
                         to_install_list.remove(node_installed)
                         time.sleep(2)
-                        set_boot(node, "localboot")
+                        set_boot(node_installed, "localboot")
                         print "node: %s has been installed" % (node_installed)
                         if len(to_install_list) > 0:
                             print "nodes remaining:",
