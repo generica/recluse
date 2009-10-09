@@ -21,12 +21,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys, os
+import sys, os, pwd
 import getopt
 
 # minimum levels to count a process
 min_mem = 10.0
 min_cpu = 10.0
+
+username = pwd.getpwuid(os.getuid()) [0]
 
 def usage():
     print "usage: assign_cores [-c] [-f] [-v] [-x] [-u <user>]"
@@ -71,6 +73,11 @@ if __name__ == "__main__":
 
        if '-x' in opt:
            very_verbose = True
+
+    if username != "root":
+        only_user = True
+        user_list = set()
+        user_list.add(username)
 
     from subprocess import Popen, PIPE
     proc = Popen(['/usr/local/recluse/scripts/bin/whatson', '-s'], stdout=PIPE, stderr=PIPE)
