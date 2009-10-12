@@ -23,3 +23,5 @@ host=$(hostname)
 
 echo "SERVERHOST $server" > /usr/spool/PBS/torque.cfg
 echo "QSUBHOST $host" >> /usr/spool/PBS/torque.cfg
+echo "ALLOWCOMPUTEHOSTSUBMIT true" >> /usr/spool/PBS/torque.cfg
+echo "XAUTHPATH /usr/bin/xauth" >> /usr/spool/PBS/torque.cfg
