@@ -53,7 +53,7 @@ fi
 # if not, then we deduce if we're on the head node
 # if so, sync to the head node tree after the compute node tree
 
-if [ -d ${root_parent}$1 ]
+if [ -d ${root_parent}$1 -o $1 == "compute" ]
 then
 	mode=$1
 fi
