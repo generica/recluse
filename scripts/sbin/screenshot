@@ -70,9 +70,7 @@ def get_screenshot(hostname, filename=False):
 		print 'ERROR: Cannot connect to host: ' + hostname
 		print "Error code: ", e[0]
 		print "Error message: ", e[1]
-	        dev_null.close()
-	        slurpp.close()
-		sys.exit(-1)
+		return
 
         # Log in to site
         slurpp.setopt(pycurl.POSTFIELDS, LOGIN_POST_DATA)
