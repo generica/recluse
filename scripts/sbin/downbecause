@@ -235,8 +235,9 @@ if __name__ == "__main__":
     show_moab = True
     show_pbs = True
     show_free_only = False
+    partition = False
 
-    opts, args = getopt.getopt(sys.argv[1:], 'vhpfm')
+    opts, args = getopt.getopt(sys.argv[1:], 'vhpfmt:')
     opts = dict(opts)
 
     if '-v' in opts:
@@ -251,11 +252,15 @@ if __name__ == "__main__":
     if '-f' in opts:
         show_free_only = True
 
+    if '-t' in opts:
+        partition = opts['-t']
+
     if '-h' in opts:
-        print "usage: downbecause [-v] [-h] [-f] [-p] [-m]"
+        print "usage: downbecause [-v] [-h] [-f] [-p] [-m] [-t <partition>]"
         print "\t-p\tonly show PBS"
         print "\t-m\tonly show moab"
         print "\t-f\tonly report on free nodes"
+        print "\t-t <partition>\tonly report on nodes in a particular partition"
         print "\t-v\tverbose output"
         print "\t-h\tshow help message"
         sys.exit(-1)
@@ -283,7 +288,10 @@ if __name__ == "__main__":
             print "ERROR: pbsnodes - %s:\n%s" % (return_code, proc.stderr.read())
             sys.exit(-1)
 
-    proc = Popen(['diagnose', '-n'], stdout=PIPE, stderr=PIPE)
+    if partition:
+        proc = Popen(['diagnose', '-n', '-t', partition], stdout=PIPE, stderr=PIPE)
+    else:
+        proc = Popen(['diagnose', '-n'], stdout=PIPE, stderr=PIPE)
     return_code = proc.wait()
     if return_code == 0:
         diagnose = proc.stdout.read()
@@ -307,6 +315,8 @@ if __name__ == "__main__":
                 downnodes.append(node)
                 nodes[node] = {'pbs': reason}
                 nodes[node]['moab'] = "NO REASON"
+            if partition:
+                nodes[node]['show'] = False
 
     for line in diagnose_list:
         line_break = line.split()
@@ -320,6 +330,8 @@ if __name__ == "__main__":
                     nodes[node]['pbs'] = "NO REASON"
                 else:
                     nodes[node]['moab'] = reason
+                if partition:
+                    nodes[node]['show'] = True
 
     downnodes.sort()
 
@@ -341,6 +353,10 @@ if __name__ == "__main__":
             longest_moab = moab_count
 
     for node in downnodes:
+
+        if partition:
+            if not nodes[node]['show']:
+                continue
 
         free = nodefreein(node)
         free_split = free.split()
