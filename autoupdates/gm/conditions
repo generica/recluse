@@ -1,0 +1,33 @@
+#!/bin/bash
+
+CONFIG=/usr/local/recluse/config
+[ -r "$CONFIG" ] || echo "Can't source $CONFIG"
+[ -r "$CONFIG" ] || exit 0                     
+source $CONFIG
+
+if test "${HAS_GM+set}" = set;
+then
+	host_gm=$HAS_GM
+else
+	host_gm=0
+fi
+
+if [ $host_gm -eq 1 ]
+then
+
+	/usr/local/recluse/scripts/sbin/canupdatemyrinet -s
+
+	mostrecent=$(rpm -qp /usr/local/recluse/centos/$centosversion/gm/latest/*.rpm --queryformat="%{version}-%{release}\n")
+	installed=$(rpm -q "gm-kernel-$mostrecent")
+
+	if [ $? -eq 0 ]
+	then
+	        exit 1
+	fi
+
+	installed=$(rpm --test -i /usr/local/recluse/centos/$centosversion/gm/latest/*.rpm >/dev/null 2>&1)
+	exit $?
+
+fi
+
+exit 1
