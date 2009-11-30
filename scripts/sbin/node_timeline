@@ -97,7 +97,10 @@ def process_line(line, status):
 def process_log(logfile):
     if verbose:
         print "looking at log: " + logfile
-    readlog = open(logfile, "r")
+    try:
+        readlog = open(logfile, "r")
+    except:
+        return
     while 1:
         line = readlog.readline()
         if not line:
