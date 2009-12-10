@@ -47,6 +47,14 @@ if [ \! -s /var/log/mcelog ]; then
 fi
 
 ##
+# Allow per-node ignoring of mce
+##
+
+if [ -e /usr/local/recluse/nodestatus/forcestatus/$(hostname)-mce ]; then
+	exit 0 ;
+fi
+
+##
 # Default - we're OK
 ##
 
