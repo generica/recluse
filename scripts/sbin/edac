@@ -1,0 +1,164 @@
+#!/bin/bash
+
+# mce
+#
+# Produce errors based on the contents of /var/log/mcelog
+#
+# Written by Chris Samuel, csamuel@vpac.org
+# Copyright (C) 2007 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+########################################################################
+# If we have one or more DIMM with these or more errors, we're bad.
+allowed_per_dimm=8
+# If we have more than these DIMMs with threshold or more ECC error, we're bad.
+allowed_dimms_with_ecc=4; allowed_ecc_dimm_threshold=2;
+# If we have more than these uncorrected ECC errors in total, we're bad.
+allowed_bad_ecc_total=0
+# If we have more than these corrected ECC errors in total, we're bad.
+allowed_ok_ecc_total=24
+# If we have more than these ECC messages in total, we're bad.
+allowed_mce_messages=30
+# If we have more than these L3 cache ECC errors, we're bad.
+allowed_l3_errors=1
+# If we have more than these L2 cache ECC errors, we're bad.
+allowed_l2_errors=1
+########################################################################
+
+
+##
+# If /var/log/mcelog is empty, exit immediately
+##
+
+if [ \! -s /var/log/mcelog ]; then
+	exit 0 ;
+fi
+
+##
+# Allow per-node ignoring of mce
+##
+
+if [ -e /usr/local/recluse/nodestatus/forcestatus/$(hostname)-mce ]; then
+	exit 0 ;
+fi
+
+##
+# Default - we're OK
+##
+
+status=0
+
+##
+# If we have one or more DIMMs with $allowed_per_dimm or more errors, we're bad.
+##
+
+count=0
+
+count=`egrep DIMM[0-9] /var/log/mcelog | sort | uniq -c | egrep -c "^ *[$allowed_per_dimm-9]|^ *[1-9][0-9]"`
+
+if [ "$count" -gt 0 ]; then
+	if [ "$count" -eq 1 ]; then
+		echo "ERROR ECC: $count DIMM with $allowed_per_dimm or more errors (DEEP)"
+	else
+		echo "ERROR ECC: $count DIMMs with $allowed_per_dimm or more errors (DEEP)"
+	fi
+	status=1
+fi
+
+##
+# If we have $allowed_dimms_with_ecc DIMMs with more than $allowed_ecc_dimm_threshold errors, we're bad.
+##
+
+count=0
+
+count=`egrep DIMM[0-9] /var/log/mcelog | sort | uniq -c | egrep -c "^ *[$allowed_ecc_dimm_threshold-9]|^ *[1-9][0-9]"`
+
+if [ "$count" -gt "$allowed_dimms_with_ecc" ]; then
+	if [ "$count" -eq 1 ]; then
+		echo "ERROR ECC: $count DIMM with $allowed_ecc_dimm_threshold or more errors (WIDE)"
+	else
+		echo "ERROR ECC: $count DIMMs with $allowed_ecc_dimm_threshold or more errors (WIDE)"
+	fi
+	status=1
+fi
+
+##
+# If we have more than $allowed_bad_ecc_total uncorrected ECC errors in total, we're bad.
+##
+
+count=0
+
+count=`fgrep -wc uncorrected /var/log/mcelog`
+
+if [ "$count" -gt "$allowed_bad_ecc_total" ]; then
+	echo "ERROR ECC: More than $allowed_bad_ecc_total uncorrected ECC errors in total ($count)"
+	status=1
+fi
+
+##
+# If we have more than $allowed_ok_ecc_total corrected ECC errors in total, we're bad.
+##
+
+count=0
+
+count=`fgrep -wc corrected /var/log/mcelog`
+
+if [ "$count" -gt "$allowed_ok_ecc_total" ]; then
+	echo "ERROR ECC: More than $allowed_ok_ecc_total corrected ECC errors in total ($count)"
+	status=1
+fi
+
+##
+# If we have more than $allowed_mce_messages ECC messages in total, we're bad.
+##
+
+count=0
+
+count=`egrep -c ^MCE /var/log/mcelog`
+
+if [ "$count" -gt "$allowed_mce_messages" ]; then
+	echo "ERROR ECC: More than $allowed_mce_messages ECC messages in total ($count)"
+	status=1
+fi
+
+##
+# If we have more than $allowed_l3_errors L3 cache ECC errors, we're bad.
+# (Usually caught by scrub)
+##
+
+count=0
+
+count=`egrep -c bit4[23] /var/log/mcelog`
+
+if [ "$count" -gt "$allowed_l3_errors" ]; then
+	echo "ERROR ECC: L3 cache ECC errors (bit42 and/or bit43) ($count)"
+	status=1
+fi
+
+##
+# If we have more than $allowed_l2_errors L2 cache ECC errors, we're bad.
+# (Usually caught by scrub)
+##
+
+count=0
+
+count=`fgrep -c L2 /var/log/mcelog`
+
+if [ "$count" -gt "$allowed_l2_errors" ]; then
+	echo "ERROR ECC: L2 cache ECC errors ($count)"
+	status=1
+fi
+
+exit $status
