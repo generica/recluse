@@ -1,0 +1,5 @@
+#!/bin/bash
+
+[ -e /var/run/up2date.pid ] && exit 1
+
+up2date -u

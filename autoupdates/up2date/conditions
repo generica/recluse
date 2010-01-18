@@ -1,0 +1,17 @@
+#!/bin/bash
+
+[ -x /usr/bin/up2date ] || exit 1
+[ -e /var/run/up2date.pid ] && exit 1
+
+users=$(whatson -s | wc -l)
+
+if [ $users -eq 0 ]
+then
+	up2date -l > /dev/null
+	if [ $? -ne 0 ]
+	then
+		exit 0
+	fi
+fi
+
+exit 1
