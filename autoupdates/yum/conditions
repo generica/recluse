@@ -7,8 +7,8 @@ users=$(whatson -s | wc -l)
 
 if [ $users -eq 0 ]
 then
-	count=$(yum check-update -q | wc -l)
-	if [ $count -ne 0 ]
+	yum check-update -q > /dev/null
+	if [ $? -ne 0 ]
 	then
 		exit 0
 	fi

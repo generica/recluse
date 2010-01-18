@@ -52,6 +52,9 @@ def valid_nodes(node_list):
 
 def get_valid_targets():
     target_list = set()
+    if not os.path.isdir(pxebase):
+        print "ERROR: %s is not a directory" % (pxebase)
+        sys.exit(-1)
     filelist = os.listdir(pxebase)
     for file in filelist:
         if file.startswith('install.'):
