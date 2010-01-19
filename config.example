@@ -6,9 +6,10 @@ cluster="tango"
 mgtnode="tango-m.vpac.org"
 number_of_compute_nodes=115
 
-# root dir of centos mirror
+# root dir of distro mirror
 mirror="rsync://mirror.aarnet.edu.au/centos"
-centosversion="5"
+distro="rhel"
+distroversion="5"
 arch="x86_64"
 
 # whitespace separated list of known bad kernels

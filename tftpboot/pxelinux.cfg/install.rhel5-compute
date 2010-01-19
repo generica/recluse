@@ -1,0 +1,10 @@
+# Perform an install
+default install
+# Don't prompt
+prompt 0
+# Display the bootup message
+display rhel5/install.msg
+
+label install
+	kernel rhel5/vmlinuz
+	append initrd=rhel5/initrd.img ks=http://172.17.1.254/rhel/5/ks-compute.cfg ksdevice=eth0 ramdisk=8192 noselinux selinux=0
