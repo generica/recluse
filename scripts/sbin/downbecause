@@ -22,6 +22,7 @@
 
 import sys, re
 import getopt
+import commands
 
 class TerminalController:
     """
@@ -193,29 +194,16 @@ class ProgressBar:
         sys.stdout.write(self.bar % (100*percent, '='*n, '-'*(width-10-n)))
 
 def nodefreein(node):
-    from subprocess import Popen, PIPE
-    proc = Popen(['nodefreein', node], stdout=PIPE, stderr=PIPE)
-    return_code = proc.wait()
-    if return_code == 0:
-        nodefreein = proc.stdout.read()
-    else:
-        print "ERROR: nodefreein - %s:\n%s" % (return_code, proc.stderr.read())
-        sys.exit(-1)
+    nodefreein = commands.getoutput('nodefreein %s' % (node))
 
     line_break = nodefreein.split()
+
     nodefreein_result = ' '.join(line_break[2:])
 
     return nodefreein_result.strip()
 
 def get_moab_reason(node):
-    from subprocess import Popen, PIPE
-    proc = Popen(['checknode', node], stdout=PIPE, stderr=PIPE)
-    return_code = proc.wait()
-    if return_code == 0:
-        checknode = proc.stdout.read()
-    else:
-        print "ERROR: checknode - %s:\n%s" % (return_code, proc.stderr.read())
-        sys.exit(-1)
+    checknode = commands.getoutput('checknode %s' % (node))
 
     checknode_list = checknode.split('\n')
 
@@ -274,30 +262,15 @@ if __name__ == "__main__":
             clusterline = line.split('=')
             cluster = clusterline[1].rstrip('" \n').lstrip('" \n')
 
-    from subprocess import Popen, PIPE
-    proc = Popen(['pbsnodes', '-l', '-n'], stdout=PIPE, stderr=PIPE)
-    return_code = proc.wait()
-    if return_code == 0:
-        pbsnodes = proc.stdout.read()
-    else:
-        proc = Popen(['pbsnodes', '-l'], stdout=PIPE, stderr=PIPE)
-        return_code = proc.wait()
-        if return_code == 0:
-            pbsnodes = proc.stdout.read()
-        else:
-            print "ERROR: pbsnodes - %s:\n%s" % (return_code, proc.stderr.read())
-            sys.exit(-1)
+    (return_code, pbsnodes) = commands.getstatusoutput("pbsnodes -l -n")
+
+    if return_code != 0:
+        pbsnodes = commands.getoutput("pbsnodes -l")
 
     if partition:
-        proc = Popen(['diagnose', '-n', '-t', partition], stdout=PIPE, stderr=PIPE)
+        diagnose = commands.getoutput("diagnose -n -t %s" % (partition))
     else:
-        proc = Popen(['diagnose', '-n'], stdout=PIPE, stderr=PIPE)
-    return_code = proc.wait()
-    if return_code == 0:
-        diagnose = proc.stdout.read()
-    else:
-        print "ERROR: diagnose - %s:\n%s" % (return_code, proc.stderr.read())
-        sys.exit(-1)
+        diagnose = commands.getoutput("diagnose -n")
 
     pbsnodes_list = pbsnodes.split('\n')
     diagnose_list = diagnose.split('\n')
