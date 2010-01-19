@@ -40,11 +40,11 @@ then
 	fi
 fi
 
-if [ -d /usr/local/recluse/centos/$centosversion/kernel.${KERNELTYPE} ]
+if [ -d /usr/local/recluse/$distro/$distroversion/kernel.${KERNELTYPE} ]
 then
-        KERNELDIR="/usr/local/recluse/centos/$centosversion/kernel.${KERNELTYPE}"
+        KERNELDIR="/usr/local/recluse/$distro/$distroversion/kernel.${KERNELTYPE}"
 else
-        KERNELDIR="/usr/local/recluse/centos/$centosversion/kernel"
+        KERNELDIR="/usr/local/recluse/$distro/$distroversion/kernel"
 fi
 
 mostrecent=$(basename $KERNELDIR/latest/*.rpm  | awk -F\- '{print $2}')

@@ -20,7 +20,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-latestkernel=$(basename /usr/local/recluse/centos/5/kernel/latest/*.rpm  | awk -F\- '{print $2}')
+CONFIG=/usr/local/recluse/config
+[ -r "$CONFIG" ] || echo "Can't source $CONFIG"
+[ -r "$CONFIG" ] || exit 0                     
+source $CONFIG
+
+latestkernel=$(basename /usr/local/recluse/$distro/$distroversion/kernel/latest/*.rpm  | awk -F\- '{print $2}')
 runningkernel=$(uname -r)
 usersonnode=$(/usr/local/recluse/scripts/bin/whosonnode | wc -l)
 tmpfs=$(awk '/\/tmp/{print $3}' /proc/mounts)
