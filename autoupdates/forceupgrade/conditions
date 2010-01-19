@@ -6,9 +6,9 @@ hostname=$(hostname | sed -e 's/\..*//')
 
 if [ "$hostname" == "$cluster" ]
 then
-	list=$(eval echo /usr/local/recluse/centos/$centosversion/forceupgrade*/*.rpm)
+	list=$(eval echo /usr/local/recluse/$distro/$distroversion/forceupgrade*/*.rpm)
 else
-	list=$(eval echo /usr/local/recluse/centos/$centosversion/forceupgrade/*.rpm)
+	list=$(eval echo /usr/local/recluse/$distro/$distroversion/forceupgrade/*.rpm)
 fi
 
 for package in $(echo $list)

@@ -15,7 +15,7 @@ fi
 if [ $host_ofed -eq 1 ]
 then
 
-	ofedver=$(basename /usr/local/recluse/centos/$centosversion/ofed/latest/mstflint-*.rpm | sed 's/.*\(ofed.*\).x86_64.rpm/\1/')
+	ofedver=$(basename /usr/local/recluse/$distro/$distroversion/ofed/latest/mstflint-*.rpm | sed 's/.*\(ofed.*\).x86_64.rpm/\1/')
 
 	installed=$(rpm -q libibcommon | grep -q "$ofedver$")
 
@@ -25,7 +25,7 @@ then
 
 		if [ $? -eq 0 ]
 		then
-			installed=$(rpm --test -i /usr/local/recluse/centos/$centosversion/ofed/latest/*.rpm >/dev/null 2>&1)
+			installed=$(rpm --test -i /usr/local/recluse/$distro/$distroversion/ofed/latest/*.rpm >/dev/null 2>&1)
 			exit $?
 		fi
 

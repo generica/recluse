@@ -17,7 +17,7 @@ then
 
 	/usr/local/recluse/scripts/sbin/canupdatemyrinet -s
 
-	mostrecent=$(rpm -qp /usr/local/recluse/centos/$centosversion/gm/latest/*.rpm --queryformat="%{version}-%{release}\n")
+	mostrecent=$(rpm -qp /usr/local/recluse/$distro/$distroversion/gm/latest/*.rpm --queryformat="%{version}-%{release}\n")
 	installed=$(rpm -q "gm-kernel-$mostrecent")
 
 	if [ $? -eq 0 ]
@@ -25,7 +25,7 @@ then
 	        exit 1
 	fi
 
-	installed=$(rpm --test -i /usr/local/recluse/centos/$centosversion/gm/latest/*.rpm >/dev/null 2>&1)
+	installed=$(rpm --test -i /usr/local/recluse/$distro/$distroversion/gm/latest/*.rpm >/dev/null 2>&1)
 	exit $?
 
 fi

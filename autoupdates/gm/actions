@@ -2,4 +2,4 @@
 
 source /usr/local/recluse/config
 
-rpm -ivh --force /usr/local/recluse/centos/$centosversion/gm/latest/*.rpm
+rpm -ivh --force /usr/local/recluse/$distro/$distroversion/gm/latest/*.rpm

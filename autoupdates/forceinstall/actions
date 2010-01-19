@@ -6,9 +6,9 @@ hostname=$(hostname | sed -e 's/\..*//')
 
 if [ "$hostname" == "$cluster" ]
 then
-        list=$(eval echo /usr/local/recluse/centos/$centosversion/forceinstall*/*.rpm)
+        list=$(eval echo /usr/local/recluse/$distro/$distroversion/forceinstall*/*.rpm)
 else
-        list=$(eval echo /usr/local/recluse/centos/$centosversion/forceinstall/*.rpm)
+        list=$(eval echo /usr/local/recluse/$distro/$distroversion/forceinstall/*.rpm)
 fi
 
 for package in $(echo $list)

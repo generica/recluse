@@ -2,11 +2,11 @@
 
 source /usr/local/recluse/config
 
-if [ -d /usr/local/recluse/centos/$centosversion/kernel.${KERNELTYPE} ]
+if [ -d /usr/local/recluse/$distro/$distroversion/kernel.${KERNELTYPE} ]
 then
-        KERNELDIR="/usr/local/recluse/centos/$centosversion/kernel.${KERNELTYPE}"
+        KERNELDIR="/usr/local/recluse/$distro/$distroversion/kernel.${KERNELTYPE}"
 else
-        KERNELDIR="/usr/local/recluse/centos/$centosversion/kernel"
+        KERNELDIR="/usr/local/recluse/$distro/$distroversion/kernel"
 fi
 
 rpm -ivh $KERNELDIR/latest/*.rpm
