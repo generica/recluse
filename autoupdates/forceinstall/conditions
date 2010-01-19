@@ -8,7 +8,7 @@ if [ "$hostname" == "$cluster" ]
 then
 	list=$(eval echo /usr/local/recluse/$distro/$distroversion/forceinstall*/*.rpm)
 else
-	list=$(eval echo /usr/local/recluse/$distro/$distrosversion/forceinstall/*.rpm)
+	list=$(eval echo /usr/local/recluse/$distro/$distroversion/forceinstall/*.rpm)
 fi
 
 for package in $(echo $list)
