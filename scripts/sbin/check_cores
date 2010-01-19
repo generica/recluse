@@ -18,6 +18,7 @@
 
 import sys
 import getopt
+import commands
 
 # minimum levels to consider a process
 min_mem = 10.0
@@ -57,20 +58,17 @@ if __name__ == "__main__":
        if '-x' in opt:
            exclude_user_list.add(opt[1])
 
-    from subprocess import Popen, PIPE
-    proc = Popen(['/usr/local/recluse/scripts/bin/whatson', '-s'], stdout=PIPE, stderr=PIPE)
-    return_code = proc.wait()
-    if return_code == 0:
-        whatson = proc.stdout.readlines()
-    else:
-        print "ERROR: %s:\n%s" % (return_code, proc.stderr.read())
-        sys.exit(-1)
+    whatson = commands.getoutput('/usr/local/recluse/scripts/bin/whatson -s').split('\n')
 
     maxcores = 0
     corecount = {}
     corelist = {}
 
     for line in whatson:
+
+        if line == "":
+            continue
+
         ourline = line.split(None, 8)
 
         proc = ourline[0]

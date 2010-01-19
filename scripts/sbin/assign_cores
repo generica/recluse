@@ -23,6 +23,7 @@
 
 import sys, os, pwd
 import getopt
+import commands
 
 # minimum levels to count a process
 min_mem = 10.0
@@ -79,14 +80,7 @@ if __name__ == "__main__":
         user_list = set()
         user_list.add(username)
 
-    from subprocess import Popen, PIPE
-    proc = Popen(['/usr/local/recluse/scripts/bin/whatson', '-s'], stdout=PIPE, stderr=PIPE)
-    return_code = proc.wait()
-    if return_code == 0:
-        whatson = proc.stdout.readlines()
-    else:
-        print "ERROR: %s:\n%s" % (return_code, proc.stderr.read())
-        sys.exit(-1)
+    whatson = commands.getoutput('/usr/local/recluse/scripts/bin/whatson -s').split('\n')
 
     for line in whatson:
         ourline = line.split(None, 8)
