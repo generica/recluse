@@ -2,6 +2,8 @@
 
 source /usr/local/recluse/config
 
+[[ -e /usr/local/recluse/autoupdates/opensm/hostlist ]] || exit 1
+
 host=$(grep -qc $HOSTNAME /usr/local/recluse/autoupdates/opensm/hostlist)
 
 if [ $? -eq 1 ]
