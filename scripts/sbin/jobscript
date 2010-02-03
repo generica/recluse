@@ -20,12 +20,31 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+strip=0
+
+while getopts ":s" option
+do
+        case $option in
+                s) strip=1;;
+        esac
+done
+
+shift $(($OPTIND - 1))
+
 if [ -e /usr/spool/PBS/server_priv/jobs/$1.*.SC ]
 then
-	cat /usr/spool/PBS/server_priv/jobs/$1.*.SC
+	file=$(echo /usr/spool/PBS/server_priv/jobs/$1.*.SC)
 elif [ -e /usr/spool/PBS/mom_priv/jobs/$1.*.SC ]
 then
-	cat /usr/spool/PBS/mom_priv/jobs/$1.*.SC
+	file=$(echo /usr/spool/PBS/mom_priv/jobs/$1.*.SC)
 else
 	echo "Job doesn't exist, or is interactive"
+	exit 1
+fi
+
+if [ $strip -eq 1 ]
+then
+	cat $file | egrep -v '^[[:space:]]*$' | egrep -v "^#[[:space:]]"
+else
+	cat $file
 fi
