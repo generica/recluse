@@ -1,0 +1,3 @@
+#!/bin/bash
+
+cp -v /usr/local/recluse/tools/quota/aquota.user /usr/spool/aquota.user

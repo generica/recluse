@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ -e /usr/spool/aquota.user -o ! -e /usr/local/recluse/tools/quota/aquota.user ]
+then
+	exit 1
+fi
+
+exit 0
