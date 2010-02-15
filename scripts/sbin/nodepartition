@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# nodepartition
+#
+# determine what moab partition a node is in
+#
+# Written by Brett Pemberton, brett@vpac.org
+# Copyright (C) 2008 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+if [ $# -ne 1 ]
+then
+	echo "usage: $0 <node>"
+	exit 1
+fi
+
+node=$1
+
+if [ -e /usr/spool/moab/moab-local.cfg ]
+then
+	MFILE=/usr/spool/moab/moab-local.cfg
+elif [ -e /usr/spool/moab/moab.cfg ]
+then
+	MFILE=/usr/spool/moab/moab.cfg
+else
+	echo "ERROR: Can't find moab config"
+	exit 1
+fi
+
+egrep -q "NODECFG\[$node\].*PARTITION" $MFILE
+status=$?
+
+if [ $status -ne 0 ]
+then
+	echo "ERROR: No partition information for node: $node"
+	exit 1
+fi
+
+partition=$(grep "NODECFG\[$node\].*PARTITION" $MFILE | sed 's/.*PARTITION=\(.*\)/\1/')
+
+echo "Node: $node is in $partition"

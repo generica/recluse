@@ -130,6 +130,7 @@ else
 	for file in $(echo $movelist)
 	do
 		owner=$(stat -c %U $file)
+		group=$(stat -c %G $file)
 		if [ "$owner" == "UNKNOWN" ]
 		then
 			removelist="$removelist $file"
@@ -144,7 +145,7 @@ else
 				echo "ERROR: could not mkdir, leaving file $file"
 				continue
 			fi
-			chown -v $owner $dir/undelivered_output
+			chown -v $owner:$group $dir/undelivered_output
 		fi
 		mv -v $file $dir/undelivered_output
 	done
