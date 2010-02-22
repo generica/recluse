@@ -38,7 +38,12 @@ elif [ -e /usr/spool/PBS/mom_priv/jobs/$1.*.SC ]
 then
 	file=$(echo /usr/spool/PBS/mom_priv/jobs/$1.*.SC)
 else
-	echo "Job doesn't exist, or is interactive"
+	if [ -e /usr/spool/PBS/*_priv/jobs/$1.*.JB ]
+	then
+		echo "Job is interactive"
+	else
+		echo "Job doesn't exist"
+	fi
 	exit 1
 fi
 
