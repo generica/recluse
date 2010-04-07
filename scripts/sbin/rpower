@@ -44,11 +44,16 @@ op=$2
 
 this_cluster=$(echo $node | sed -e 's/[0-9][0-9][0-9]//')
 
-if [ "$this_cluster" == "$cluster" ]
+if [ "$this_cluster" == "$node" ]
 then
 	node_mgt=${node}-m
 else
-	node_mgt=${node}
+	if [ "$this_cluster" == "$cluster" ]
+	then
+		node_mgt=${node}-m
+	else
+		node_mgt=${node}
+	fi
 fi
 
 if [ "$op" == "query" ]
