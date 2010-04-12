@@ -41,19 +41,13 @@ node=$1
 op=$2
 
 # if they sent an ip address, don't tack on -m
+ISIP=$(echo "${node}." | egrep "([0-9]{1,3}\.){4}")
 
-this_cluster=$(echo $node | sed -e 's/[0-9][0-9][0-9]//')
-
-if [ "$this_cluster" == "$node" ]
+if [ ! "$ISIP" ]
 then
 	node_mgt=${node}-m
 else
-	if [ "$this_cluster" == "$cluster" ]
-	then
-		node_mgt=${node}-m
-	else
-		node_mgt=${node}
-	fi
+	node_mgt=${node}
 fi
 
 if [ "$op" == "query" ]
