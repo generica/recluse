@@ -2,8 +2,6 @@
 
 source /usr/local/recluse/config
 
-rpm -Uvh --force /usr/local/recluse/$distro/$distroversion/ofed/opensm-latest/*.rpm
-
 chkconfig --add opensmd
 chkconfig --level 345 opensmd on
 
