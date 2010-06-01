@@ -87,6 +87,7 @@ def print_target(target):
             print line[5:],
             fileinput.close()
             return
+    print
     fileinput.close()
     return
 
