@@ -26,6 +26,7 @@ import getopt
 import re
 import time
 import fileinput
+import math
 
 pxebase = '/tftpboot/pxelinux.cfg'
 
@@ -71,9 +72,19 @@ def valid_target(target):
         return False
 
 def print_target(target):
+    print "\t" + target,
     for line in fileinput.input(pxebase + '/install.' + target):
         if line.startswith('#DESC'):
-            print "\t" + target + "\t" + line[5:],
+            l = len(target)
+            if (l > 21):
+                print "\t",
+            elif (l > 14):
+                print "\t\t",
+            elif (l > 10):
+                print "\t\t\t",
+            else:
+                print "\t\t\t\t",
+            print line[5:],
             fileinput.close()
             return
     fileinput.close()
