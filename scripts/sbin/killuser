@@ -6,7 +6,7 @@
 #
 # Simple script to kill all a users jobs.
 #
-# Written by Chris Samuel <csamuel@vpac.org>
+# Written by Chris Samuel <csamuel@vpac.org>, Brett Pemberton <brett@vpac.org>
 # Copyright (C) 2004 Victorian Partnership for Advanced Computing
 
 # This program is free software: you can redistribute it and/or modify
@@ -41,7 +41,7 @@ if [ "$VICTIM" == "$USER" ]; then
 	exit 1
 fi
 
-JOBS=`ps h U $VICTIM o '%p'`
+JOBS=$(ps h U $VICTIM o '%p')
 
 if [ -z "$JOBS" ]; then
 	echo "No jobs belonging to $VICTIM"
@@ -54,5 +54,9 @@ echo
 echo "Killing them nicely.."
 kill $JOBS
 sleep 5
-echo "killing them nastily.."
-kill -9 $JOBS
+NEWJOBS=$(ps h U $VICTIM o '%p')
+if [ ! -z "$NEWJOBS" ]
+then
+	echo "killing them nastily.."
+	kill -9 $JOBS
+fi
