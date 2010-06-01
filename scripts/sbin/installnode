@@ -25,6 +25,7 @@ import sys, os
 import getopt
 import re
 import time
+import fileinput
 
 pxebase = '/tftpboot/pxelinux.cfg'
 
@@ -51,14 +52,15 @@ def valid_nodes(node_list):
     return error_nodes
 
 def get_valid_targets():
-    target_list = set()
+    target_list = []
     if not os.path.isdir(pxebase):
         print "ERROR: %s is not a directory" % (pxebase)
         sys.exit(-1)
     filelist = os.listdir(pxebase)
     for file in filelist:
         if file.startswith('install.'):
-            target_list.add(re.sub('^install.', '', file))
+            target_list.append(re.sub('^install.', '', file))
+    target_list.sort()
     return target_list
 
 def valid_target(target):
@@ -68,11 +70,20 @@ def valid_target(target):
     else:
         return False
 
+def print_target(target):
+    for line in fileinput.input(pxebase + '/install.' + target):
+        if line.startswith('#DESC'):
+            print "\t" + target + "\t" + line[5:],
+            fileinput.close()
+            return
+    fileinput.close()
+    return
+
 def print_valid_targets():
-    print "Valid install targets:",
+    print "Valid install targets:"
     target_list = get_valid_targets()
     for target in target_list:
-       print target,
+       print_target(target)
     print
 
 def convert_ip_to_hex(ip):

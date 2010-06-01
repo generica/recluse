@@ -4,7 +4,7 @@
 # 
 # Produce errors for offline nodes based on moab and torque information
 #                                                        
-# Written by Chris Samuel, csamuel@vpac.org              
+# Written by Brett Pemberton, brett@vpac.org              
 # Copyright (C) 2009 Victorian Partnership for Advanced Computing
 
 # This program is free software: you can redistribute it and/or modify
@@ -23,6 +23,8 @@
 import sys, re
 import getopt
 import commands
+
+printed_not_found = False
 
 class TerminalController:
     """
@@ -194,13 +196,20 @@ class ProgressBar:
         sys.stdout.write(self.bar % (100*percent, '='*n, '-'*(width-10-n)))
 
 def nodefreein(node):
-    nodefreein = commands.getoutput('nodefreein %s' % (node))
+    global printed_not_found
 
-    line_break = nodefreein.split()
+    (status, nodefreein) = commands.getstatusoutput('nodefreein %s' % (node))
 
-    nodefreein_result = ' '.join(line_break[2:])
+    if status == 0:
+        line_break = nodefreein.split()
+        nodefreein_result = ' '.join(line_break[2:])
+        return nodefreein_result.strip()
 
-    return nodefreein_result.strip()
+    if printed_not_found == False:
+        print "WARNING: Command 'nodefreein' not found, won't be able to determine free times\n"
+        printed_not_found = True
+
+    return "xxx UNKNOWN xxx xxx xxx xxx"
 
 def get_moab_reason(node):
     checknode = commands.getoutput('checknode %s' % (node))
@@ -210,9 +219,12 @@ def get_moab_reason(node):
     reason = "NO REASON"
 
     for line in checknode_list:
+        if line.startswith('RM') and line.count('ERROR') > 0:
+            line_break = line.split('\'')
+            return line_break[1][6:]
         if line.find('node rm message') != -1:
             line_break = line.split('\'')
-            reason = line_break[1][6:]
+            return line_break[1][6:]
 
     return reason
 
@@ -252,15 +264,6 @@ if __name__ == "__main__":
         print "\t-v\tverbose output"
         print "\t-h\tshow help message"
         sys.exit(-1)
-
-    config = open('/usr/local/recluse/config', 'r')
-    our_config = config.readlines()
-    config.close()
-
-    for line in our_config:
-        if line.startswith('cluster='):
-            clusterline = line.split('=')
-            cluster = clusterline[1].rstrip('" \n').lstrip('" \n')
 
     (return_code, pbsnodes) = commands.getstatusoutput("pbsnodes -l -n")
 
