@@ -1,3 +1,4 @@
+#DESC Head node install
 # Perform an install
 default install
 # Don't prompt

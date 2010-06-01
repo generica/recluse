@@ -1,3 +1,4 @@
+#DESC Compute node install
 # Perform an install
 default install
 # Don't prompt

@@ -1,3 +1,4 @@
+#DESC RHEL5 install
 # Perform an install
 default install
 # Don't prompt
