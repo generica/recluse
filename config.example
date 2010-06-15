@@ -10,6 +10,7 @@ number_of_compute_nodes=115
 mirror="rsync://mirror.aarnet.edu.au/centos"
 distro="centos"
 distroversion="5"
+distrominorversion="4"
 arch="x86_64"
 
 # whitespace separated list of known bad kernels

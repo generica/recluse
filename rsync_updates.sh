@@ -31,10 +31,10 @@ OPTS="-pvrDt --delete"
 
 echo "Started update at" $(date) >> $LOGFILE 2>&1
 logger -t rsync "re-rsyncing the centos core tree"
-rsync ${OPTS} $mirror/$distroversion/os/$arch/ $BASEDIR/centos/$distroversion/os  >> $LOGFILE 2>&1
-rsync ${OPTS} $mirror/$distroversion/updates/$arch/ $BASEDIR/centos/$distroversion/updates  >> $LOGFILE 2>&1
-rsync ${OPTS} $mirror/$distroversion/addons/$arch/ $BASEDIR/centos/$distroversion/addons >> $LOGFILE 2>&1
-rsync ${OPTS} $mirror/$distroversion/extras/$arch/ $BASEDIR/centos/$distroversion/extras >> $LOGFILE 2>&1
-rsync ${OPTS} $mirror/$distroversion/centosplus/$arch/ $BASEDIR/centos/$distroversion/centosplus >> $LOGFILE 2>&1
+rsync ${OPTS} $mirror/${distroversion}.${distrominorversion}/os/$arch/ $BASEDIR/centos/$distroversion/os  >> $LOGFILE 2>&1
+rsync ${OPTS} $mirror/${distroversion}.${distrominorversion}/updates/$arch/ $BASEDIR/centos/$distroversion/updates  >> $LOGFILE 2>&1
+rsync ${OPTS} $mirror/${distroversion}.${distrominorversion}/addons/$arch/ $BASEDIR/centos/$distroversion/addons >> $LOGFILE 2>&1
+rsync ${OPTS} $mirror/${distroversion}.${distrominorversion}/extras/$arch/ $BASEDIR/centos/$distroversion/extras >> $LOGFILE 2>&1
+rsync ${OPTS} $mirror/${distroversion}.${distrominorversion}/centosplus/$arch/ $BASEDIR/centos/$distroversion/centosplus >> $LOGFILE 2>&1
 echo "End: " $(date) >> $LOGFILE 2>&1
 
