@@ -9,6 +9,11 @@ else
 	KERNELDIR="/usr/local/recluse/$distro/$distroversion/kernel"
 fi
 
+if [ ! -e /etc/upgradekernel ]
+then
+	exit 1
+fi
+
 mostrecent=$(rpm -qp $KERNELDIR/latest/*.rpm --queryformat="%{version}-%{release}\n")
 
 installed=$(rpm -q "kernel-$mostrecent")

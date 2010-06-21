@@ -12,6 +12,10 @@ else
 	host_gm=0
 fi
 
+# Disabled for now
+# Taken care of in kernel
+exit 1
+
 if [ $host_gm -eq 1 ]
 then
 

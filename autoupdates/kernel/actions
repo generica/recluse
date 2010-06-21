@@ -9,4 +9,7 @@ else
         KERNELDIR="/usr/local/recluse/$distro/$distroversion/kernel"
 fi
 
-rpm -ivh $KERNELDIR/latest/*.rpm
+rpm -ivh $KERNELDIR/latest/*.rpm $KERNELDIR/latest/extras.install/*.rpm
+rpm -Uvh $KERNELDIR/latest/extras.upgrade/*.rpm
+
+rm -f /etc/upgradekernel

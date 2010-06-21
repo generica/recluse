@@ -12,6 +12,10 @@ else
 	host_ofed=1
 fi
 
+# Disabled for now
+# Taken care of in kernel
+exit 1
+
 if [ $host_ofed -eq 1 ]
 then
 
