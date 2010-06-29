@@ -268,7 +268,11 @@ if __name__ == "__main__":
     (return_code, pbsnodes) = commands.getstatusoutput("pbsnodes -l -n")
 
     if return_code != 0:
-        pbsnodes = commands.getoutput("pbsnodes -l")
+        (return_code, pbsnodes) = commands.getstatusoutput("pbsnodes -l")
+
+    if return_code != 0:
+        print "ERROR: pbs server appears to be down"
+        sys.exit(-1)
 
     if partition:
         diagnose = commands.getoutput("diagnose -n -t %s" % (partition))
