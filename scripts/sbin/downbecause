@@ -275,9 +275,13 @@ if __name__ == "__main__":
         sys.exit(-1)
 
     if partition:
-        diagnose = commands.getoutput("diagnose -n -t %s" % (partition))
+        (return_code, diagnose) = commands.getstatusoutput("diagnose -n -t %s" % (partition))
     else:
-        diagnose = commands.getoutput("diagnose -n")
+        (return_code, diagnose) = commands.getstatusoutput("diagnose -n")
+
+    if return_code != 0:
+        print "ERROR: maob appears to be down"
+        sys.exit(-1)
 
     pbsnodes_list = pbsnodes.split('\n')
     diagnose_list = diagnose.split('\n')
