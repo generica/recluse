@@ -9,7 +9,20 @@ else
         KERNELDIR="/usr/local/recluse/$distro/$distroversion/kernel"
 fi
 
-rpm -ivh $KERNELDIR/latest/*.rpm $KERNELDIR/latest/extras.install/*.rpm
-rpm -Uvh $KERNELDIR/latest/extras.upgrade/*.rpm
+if [ -d $KERNELDIR/latest/extras.install ]
+then
+	extrasi=$(eval echo $KERNELDIR/latest/extras.install/*.rpm)
+fi
+if [ -d $KERNELDIR/latest/extras.upgrade ]
+then
+	extrasu=$(eval echo $KERNELDIR/latest/extras.upgrade/*.rpm)
+fi
+
+rpm -ivh $KERNELDIR/latest/*.rpm $extrasi
+
+if [ ! -z $extrasu ]
+then
+	rpm -Uvh $extrasu
+fi
 
 rm -f /etc/upgradekernel
