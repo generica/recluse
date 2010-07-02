@@ -20,7 +20,7 @@ fi
 
 rpm -ivh $KERNELDIR/latest/*.rpm $extrasi
 
-if [ ! -z $extrasu ]
+if [ ! -z "$extrasu" ]
 then
 	rpm -Uvh $extrasu
 fi
