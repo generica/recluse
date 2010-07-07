@@ -280,7 +280,7 @@ if __name__ == "__main__":
         (return_code, diagnose) = commands.getstatusoutput("diagnose -n")
 
     if return_code != 0:
-        print "ERROR: maob appears to be down"
+        print "ERROR: moab appears to be down"
         sys.exit(-1)
 
     pbsnodes_list = pbsnodes.split('\n')

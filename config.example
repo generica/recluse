@@ -10,7 +10,7 @@ number_of_compute_nodes=115
 mirror="rsync://mirror.aarnet.edu.au/centos"
 distro="centos"
 distroversion="5"
-distrominorversion="4"
+distrominorversion="5"
 arch="x86_64"
 
 # whitespace separated list of known bad kernels
@@ -20,7 +20,7 @@ smart_options="-d ata"
 
 ipmi_user=ADMIN
 
-storage_server="stg7"
+storage_server="stg"
 
 user_lookup=brett
 
