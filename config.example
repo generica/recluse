@@ -21,6 +21,7 @@ smart_options="-d ata"
 ipmi_user=ADMIN
 
 storage_server="stg"
+storage_server_mounts="3"
 
 user_lookup=brett
 
