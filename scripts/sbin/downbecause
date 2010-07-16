@@ -257,8 +257,8 @@ if __name__ == "__main__":
 
     if '-h' in opts:
         print "usage: downbecause [-v] [-h] [-f] [-p] [-m] [-t <partition>]"
-        print "\t-p\tonly show PBS"
-        print "\t-m\tonly show moab"
+        print "\t-p\tonly show PBS down messages"
+        print "\t-m\tonly show moab down messages"
         print "\t-f\tonly report on free nodes"
         print "\t-t <partition>\tonly report on nodes in a particular partition"
         print "\t-v\tverbose output"
