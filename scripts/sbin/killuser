@@ -60,3 +60,10 @@ then
 	echo "killing them nastily.."
 	kill -9 $JOBS
 fi
+NEWNEWJOBS=$(ps h U $VICTIM o '%p')
+if [ ! -z "$NEWNEWJOBS" ]
+
+then
+	echo "Error, jobs still remain.."
+	exit 1
+fi
