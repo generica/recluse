@@ -56,3 +56,15 @@ ERROR: ipmi password file not set up
 SOLUTION: add IPMI admin user password to /etc/ipmi_pass
 
 ----------------------------------------------------------------------
+
+Automatic target types:
+
+Nodes can be defined with their target install types in '/usr/local/recluse/nodestatus/node_targets'
+This should be of the form
+
+nodename1 target_type
+nodename2 target_type
+nodename3 alternate_target
+
+Nodes documented in this way can be installed via 'installnode' without specifying their target type
+Nodes installed with 'installnode' will have their last install type documented in this file automatically

@@ -29,6 +29,7 @@ import fileinput
 import math
 
 pxebase = '/tftpboot/pxelinux.cfg'
+last_target_file = '/usr/local/recluse/nodestatus/node_targets'
 
 def usage():
     print "usage: installnode [-l] | < -n node | -f nodefile > -t target"
@@ -160,6 +161,55 @@ def set_boot(node, target):
         target = 'install.' + target
     os.symlink(target, os.path.join(pxebase, node_hex))
 
+def get_last_target(node_list):
+
+    if not os.path.isfile(last_target_file):
+        return False
+
+    t = open(last_target_file, 'r')
+    targets = t.readlines()
+    t.close()
+
+    our_last_target = False
+
+    for node in node_list:
+        for line in targets:
+            target_node = line.split()[0]
+            target_target = line.split()[1]
+            if target_node == node:
+                if our_last_target == False:
+                    our_last_target = target_target
+                if our_last_target != target_target:
+                    print "Two nodes specified with different installs, not supported yet"
+                    print "For now, install in groups of node types"
+                    return False
+
+    return our_last_target
+
+def update_last_install_type(node, target):
+
+    t = open(last_target_file, 'r')
+    targets = t.readlines()
+    t.close()
+
+    i = 0
+    match = False
+
+    for line in targets:
+         line_node = line.split()[0]
+         if line_node == node:
+             targets[i] = "%s %s\n" % (node, target)
+             match = True
+             break
+         i += 1
+
+    if match == False:
+        targets.append("%s %s\n" % (node, target))
+
+    t = open(last_target_file, 'w')
+    t.writelines(targets)
+    t.close()
+
 if __name__ == "__main__":
 
     target = False
@@ -196,7 +246,9 @@ if __name__ == "__main__":
            sys.exit(0)
 
     if not (target and len(node_list) > 0):
-        usage()
+        target = get_last_target(node_list)
+        if target == False:
+            usage()
 
     if not valid_target(target):
         print "ERROR: target %s is not valid" % (target)
@@ -247,6 +299,7 @@ if __name__ == "__main__":
                         time.sleep(2)
                         set_boot(node_installed, "localboot")
                         print "node: %s has been installed" % (node_installed)
+                        update_last_install_type(node_installed, target)
                         if len(to_install_list) > 0:
                             print "nodes remaining:",
                             for n in to_install_list:
