@@ -30,13 +30,15 @@ import math
 
 pxebase = '/tftpboot/pxelinux.cfg'
 last_target_file = '/usr/local/recluse/nodestatus/node_targets'
+verbose = False
 
 def usage():
-    print "usage: installnode [-l] | < -n node | -f nodefile > -t target"
+    print "usage: installnode [-l] [-v] | < -n node | -f nodefile > -t target"
     print "   -n : hostname of node to install"
     print "   -f : file containing hostnames of node to install"
     print "   -t : target install type"
     print "   -l : list valid target install types"
+    print "   -v : verbose mode"
     sys.exit(0)
 
 def valid_nodes(node_list):
@@ -124,6 +126,9 @@ def node_to_ip(node):
     hosts = h.readlines()
     h.close()
 
+    if verbose:
+        print "Looking for ip that belongs to host %s in /etc/hosts" % (node)
+
     for line in hosts:
         l = line.split()
         if node in l:
@@ -136,6 +141,9 @@ def ip_to_node(ip):
     d = open('/etc/dhcpd.conf', 'r')
     dhcp = d.readlines()
     d.close()
+
+    if verbose:
+        print "Looking for host that belongs to ip %s in dhcpd.conf" % (ip)
 
     prev = ""
     prev2 = ""
@@ -153,6 +161,9 @@ def ip_to_node(ip):
 def set_boot(node, target):
     node_ip = node_to_ip(node)
     node_hex = convert_ip_to_hex(node_ip)
+
+    if verbose:
+        print "Setting target of %s to %s" % (node, target)
 
     if os.path.islink(os.path.join(pxebase, node_hex)):
         os.remove(os.path.join(pxebase, node_hex))
@@ -174,8 +185,11 @@ def get_last_target(node_list):
 
     for node in node_list:
         for line in targets:
-            target_node = line.split()[0]
-            target_target = line.split()[1]
+            line_split = line.split()
+            if len(line_split) != 2:
+                continue
+            target_node = line_split[0]
+            target_target = line_split[1]
             if target_node == node:
                 if our_last_target == False:
                     our_last_target = target_target
@@ -216,7 +230,7 @@ if __name__ == "__main__":
     node_list = set()
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "f:t:n:l")
+        opts, args = getopt.getopt(sys.argv[1:], "f:t:n:lv")
     except getopt.GetoptError, err:
         # print help information and exit:
         print str(err) # will print something like "option -a not recognized"
@@ -245,8 +259,13 @@ if __name__ == "__main__":
            print_valid_targets()
            sys.exit(0)
 
+       if '-v' in opt:
+           verbose = True
+
     if not (target and len(node_list) > 0):
         target = get_last_target(node_list)
+        if verbose:
+            print "Using last known target [%s] for install" % (target)
         if target == False:
             usage()
 
@@ -293,6 +312,8 @@ if __name__ == "__main__":
                 partial = ""
                 if re.search("RRQ from .* filename pxelinux.0", line):
                     node_ip = line.split()[7]
+                    if verbose:
+                        print "Noticed a pxe install from ip %s" % (node_ip)
                     node_installed = ip_to_node(node_ip)
                     if node_installed in to_install_list:
                         to_install_list.remove(node_installed)
@@ -309,6 +330,9 @@ if __name__ == "__main__":
                             print "All nodes installing"
                             log.close()
                             sys.exit(0)
+                    else:
+                        if verbose:
+                            print "Node %s was not in our install list, ignoring" % (node_installed)
                 current_position = log.tell()
                 time.sleep(1)
 
