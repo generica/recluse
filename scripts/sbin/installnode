@@ -293,6 +293,7 @@ if __name__ == "__main__":
     print "Install prepared, please reboot nodes"
 
     current_position = 0
+    match = False
 
     log = open('/var/log/messages', 'r')
     log.seek(0, 2)
@@ -310,8 +311,15 @@ if __name__ == "__main__":
             else:
                 line = partial + line
                 partial = ""
+                match = False
                 if re.search("RRQ from .* filename pxelinux.0", line):
                     node_ip = line.split()[7]
+                    match = True
+                elif re.search("Serving pxelinux.0 to", line):
+                    node_ip_port = line.split()[8]
+                    node_ip = node_ip_port.split(':')[0]
+                    match = True
+                if match == True:
                     if verbose:
                         print "Noticed a pxe install from ip %s" % (node_ip)
                     node_installed = ip_to_node(node_ip)
