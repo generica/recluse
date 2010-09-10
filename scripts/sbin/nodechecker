@@ -90,8 +90,9 @@ def compare_procs_with_jobs():
         for job in jobs_split:
             if job != "":
                 num = re.split('[\./]', job)[1]
-                if jobmap[num] == proc_owner:
-                    has_owner = 1
+		if num != "":
+                    if jobmap[num] == proc_owner:
+                        has_owner = 1
 
         if has_owner == 0:
             print "rogue process owned by: " + proc_owner + " on " + node
