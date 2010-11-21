@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 
 source /usr/local/recluse/config
 
@@ -22,7 +22,11 @@ rpm -ivh $KERNELDIR/latest/*.rpm $extrasi
 
 if [ ! -z "$extrasu" ]
 then
-	rpm -Uvh $extrasu
+	rpm --force --replacepkgs -Uvh $extrasu
 fi
+
+mostrecent=$(rpm -qp $KERNELDIR/latest/*.rpm --queryformat="%{version}\n")
+
+depmod -a $mostrecent
 
 rm -f /etc/upgradekernel
