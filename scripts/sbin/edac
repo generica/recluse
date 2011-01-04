@@ -64,9 +64,9 @@ status=0
 # If we have one or more DIMMs with $allowed_per_dimm or more errors, we're bad.
 ##
 
-for i in /sys/devices/system/edac/mc/mc*/csrow*/ce_count; do
+for i in /sys/devices/system/edac/mc/mc*/csrow*/ch?_ce_count; do
 	if [ `cat $i` -gt $allowed_per_dimm ]; then
-		DIMM=`echo $i | awk -F/ '{print $7 " " $8}'`
+		DIMM=`echo $i | awk -F/ '{print $7 " " $8 " " $9}' | sed -e "s/_ce_count//"`
 		echo "ERROR EDAC: $DIMM has `cat $i` corrected errors (DEEP)"
 		status=1
 	fi
