@@ -35,7 +35,7 @@ fi
 
 for job in $(qstat -u $user | grep -w R | awk -F. '{print $1}')
 do 
-	for node in $(checkjob $job | grep $cluster | tr ':' '\n')
+	for node in $(checkjob $job | egrep "$cluster[0-9][0-9][0-9]" | tr ':' '\n')
 	do
 		echo $node | sed "s/.*\($cluster[0-9][0-9][0-9]\).*/\1/"
 	done | grep $cluster
