@@ -46,7 +46,7 @@ do
 		# need this for job id detection
 		continue
 	fi
-	job=$(cat /proc/$pid/cpuset | sed 's#/torque/\([0-9]*\)\..*#\1#')
+	job=$(cat /proc/$pid/cpuset | sed 's#/torque/\([0-9-]*\)\..*#\1#')
 	isjob=$(echo $job | egrep -c "[0-9]")
 	if [ $isjob -eq 0 ]
 	then

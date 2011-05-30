@@ -6,6 +6,9 @@
 #
 # Written by Chris Samuel, csamuel@vpac.org
 # Copyright (C) 2009 Victorian Partnership for Advanced Computing
+#
+# 20110110: Extended DIMM identification; Graham Jenkins, graham@vpac.org
+# 20110216: Option to show DIMM if parameters entered; Graham Jenkins.
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -37,6 +40,27 @@ allowed_l3_errors=1
 allowed_l2_errors=1
 ########################################################################
 
+##
+# Function to map EDAC strings to DIMM locations
+##
+map () {
+  awk '{cpu   = 1 + substr($1,length($1),1)
+        csrow = 4 - int(substr($2,length($2),1)/2) 
+        if ($3 == "Ch0") {suffix="A"} else {suffix="B"}
+        print "CPU"cpu " DIMM "csrow""suffix           }'
+}
+
+##
+# Direct use of 'map' function
+##
+if [ $# -gt 0 ]; then
+  if [ $# -eq 3 ]; then
+    echo $1 $2 $3 | map ; exit 0
+  else
+    ( echo "Usage: `basename $0` [ mcI csrowJ chK ]"
+      echo " e.g.: `basename $0` mc0 csrow0 ch1"    ) >&2 ; exit 2
+  fi
+fi
 
 ##
 # If no EDAC support exit immediately
@@ -64,9 +88,15 @@ status=0
 # If we have one or more DIMMs with $allowed_per_dimm or more errors, we're bad.
 ##
 
+if [ ! -e /sys/devices/system/edac/mc/mc0 ]
+then
+	# No edac on this machine
+	exit 0
+fi
+
 for i in /sys/devices/system/edac/mc/mc*/csrow*/ch?_ce_count; do
 	if [ `cat $i` -gt $allowed_per_dimm ]; then
-		DIMM=`echo $i | awk -F/ '{print $7 " " $8 " " $9}' | sed -e "s/_ce_count//"`
+		DIMM=`echo $i | awk -F/ '{print $7 " " $8 " " $9}' | sed -e "s/_ce_count//" | map`
 		echo "ERROR EDAC: $DIMM has `cat $i` corrected errors (DEEP)"
 		status=1
 	fi

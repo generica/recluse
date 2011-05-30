@@ -91,9 +91,11 @@ def compare_procs_with_jobs():
             if job != "":
                 num = re.split('[\./]', job)[1]
 		if num != "":
-                    if jobmap[num] == proc_owner:
-                        has_owner = 1
-
+                    if jobmap.has_key(num):
+                        if jobmap[num] == proc_owner:
+                            has_owner = 1
+                    else:
+                        print "Job with id %s on node %s does not exist" % (num, node)
         if has_owner == 0:
             print "rogue process owned by: " + proc_owner + " on " + node
             exit_status = 1
