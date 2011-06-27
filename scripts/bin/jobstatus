@@ -27,8 +27,8 @@ function usage {
         echo "            [e]rror"
         echo "            [p]bs-script for a job"
         echo "            [t]mpdir for a job"
-        echo "            [m]memory usage for a job"
-        echo "            [r]running processes for a job"
+        echo "            [m]emory usage for a job"
+        echo "            [r]unning processes for a job"
 	exit
 }
 
