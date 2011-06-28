@@ -177,7 +177,10 @@ def get_last_target(node_list):
     if not os.path.isfile(last_target_file):
         return False
 
-    t = open(last_target_file, 'r')
+    try:
+        t = open(last_target_file, 'r')
+    except:
+        return False
     targets = t.readlines()
     t.close()
 
@@ -202,9 +205,12 @@ def get_last_target(node_list):
 
 def update_last_install_type(node, target):
 
-    t = open(last_target_file, 'r')
-    targets = t.readlines()
-    t.close()
+    try:
+         t = open(last_target_file, 'r')
+         targets = t.readlines()
+         t.close()
+    except:
+         targets = ""
 
     i = 0
     match = False
