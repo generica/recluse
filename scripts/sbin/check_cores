@@ -24,10 +24,12 @@ import commands
 min_mem = 10.0
 min_cpu = 10.0
 
+
 def usage():
     print "usage: check_cores [-x <user>]"
     print "   -x <user> : excluse this user's tasks"
     sys.exit(0)
+
 
 def print_process(process):
 
@@ -49,14 +51,14 @@ if __name__ == "__main__":
         opts, args = getopt.getopt(sys.argv[1:], "x:")
     except getopt.GetoptError, err:
         # print help information and exit:
-        print str(err) # will print something like "option -a not recognized"
+        print str(err)    # will print something like "option -a not recognized"
         usage()
         sys.exit(2)
 
     for opt in opts:
 
-       if '-x' in opt:
-           exclude_user_list.add(opt[1])
+        if '-x' in opt:
+            exclude_user_list.add(opt[1])
 
     whatson = commands.getoutput('/usr/local/recluse/scripts/bin/whatson -s').split('\n')
 
