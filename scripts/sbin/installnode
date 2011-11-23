@@ -21,7 +21,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys, os
+import sys
+import os
 import getopt
 import re
 import time
@@ -32,6 +33,7 @@ pxebase = '/tftpboot/pxelinux.cfg'
 last_target_file = '/usr/local/recluse/nodestatus/node_targets'
 verbose = False
 
+
 def usage():
     print "usage: installnode [-l] [-v] | < -n node | -f nodefile > -t target"
     print "   -n : hostname of node to install"
@@ -40,6 +42,7 @@ def usage():
     print "   -l : list valid target install types"
     print "   -v : verbose mode"
     sys.exit(0)
+
 
 def valid_nodes(node_list):
     error_nodes = set()
@@ -55,6 +58,7 @@ def valid_nodes(node_list):
             error_nodes.add(node)
     return error_nodes
 
+
 def get_valid_targets():
     target_list = []
     if not os.path.isdir(pxebase):
@@ -67,12 +71,14 @@ def get_valid_targets():
     target_list.sort()
     return target_list
 
+
 def valid_target(target):
     target_list = get_valid_targets()
     if target in target_list:
         return True
     else:
         return False
+
 
 def print_target(target):
     print "\t" + target,
@@ -94,12 +100,14 @@ def print_target(target):
     fileinput.close()
     return
 
+
 def print_valid_targets():
     print "Valid install targets:"
     target_list = get_valid_targets()
     for target in target_list:
-       print_target(target)
+        print_target(target)
     print
+
 
 def convert_ip_to_hex(ip):
 
@@ -115,11 +123,12 @@ def convert_ip_to_hex(ip):
 
     hex_ip_addr = 0
 
-    for i in range(1,5):
-        hex_ip_addr += int(ip_match.group(i)) << (4-i)*8
+    for i in range(1, 5):
+        hex_ip_addr += int(ip_match.group(i)) << (4 - i) * 8
 
     fmt = "%%0%dX" % ((32) / 4)
     return fmt % (hex_ip_addr >> 0)
+
 
 def node_to_ip(node):
     h = open('/etc/hosts', 'r')
@@ -136,6 +145,7 @@ def node_to_ip(node):
 
     print "ERROR: couldn't find node %s in /etc/hosts" % (node)
     sys.exit(-1)
+
 
 def ip_to_node(ip):
     d = open('/etc/dhcpd.conf', 'r')
@@ -158,6 +168,7 @@ def ip_to_node(ip):
     print "ERROR: couldn't find ip address %s in /etc/dhcpd.conf" % (ip)
     sys.exit(-1)
 
+
 def set_boot(node, target):
     node_ip = node_to_ip(node)
     node_hex = convert_ip_to_hex(node_ip)
@@ -171,6 +182,7 @@ def set_boot(node, target):
     if target != "localboot":
         target = 'install.' + target
     os.symlink(target, os.path.join(pxebase, node_hex))
+
 
 def get_last_target(node_list):
 
@@ -203,25 +215,26 @@ def get_last_target(node_list):
 
     return our_last_target
 
+
 def update_last_install_type(node, target):
 
     try:
-         t = open(last_target_file, 'r')
-         targets = t.readlines()
-         t.close()
+        t = open(last_target_file, 'r')
+        targets = t.readlines()
+        t.close()
     except:
-         targets = ""
+        targets = ""
 
     i = 0
     match = False
 
     for line in targets:
-         line_node = line.split()[0]
-         if line_node == node:
-             targets[i] = "%s %s\n" % (node, target)
-             match = True
-             break
-         i += 1
+        line_node = line.split()[0]
+        if line_node == node:
+            targets[i] = "%s %s\n" % (node, target)
+            match = True
+            break
+        i += 1
 
     if match == False:
         targets.append("%s %s\n" % (node, target))
@@ -239,34 +252,34 @@ if __name__ == "__main__":
         opts, args = getopt.getopt(sys.argv[1:], "f:t:n:lv")
     except getopt.GetoptError, err:
         # print help information and exit:
-        print str(err) # will print something like "option -a not recognized"
+        print str(err)       # will print something like "option -a not recognized"
         usage()
         sys.exit(2)
 
     for opt in opts:
 
-       if '-t' in opt:
-           target = opt[1]
+        if '-t' in opt:
+            target = opt[1]
 
-       if '-f' in opt:
-           if not os.path.isfile(opt[1]):
-               print "ERROR: file %s is not readable" % (opt[1])
-               sys.exit(-1)
-           f = open(opt[1], 'r')
-           nodefile = f.readlines()
-           f.close()
-           for node in nodefile:
-               node_list.add(node.strip())
+        if '-f' in opt:
+            if not os.path.isfile(opt[1]):
+                print "ERROR: file %s is not readable" % (opt[1])
+                sys.exit(-1)
+            f = open(opt[1], 'r')
+            nodefile = f.readlines()
+            f.close()
+            for node in nodefile:
+                node_list.add(node.strip())
 
-       if '-n' in opt:
-           node_list.add(opt[1])
+        if '-n' in opt:
+            node_list.add(opt[1])
 
-       if '-l' in opt:
-           print_valid_targets()
-           sys.exit(0)
+        if '-l' in opt:
+            print_valid_targets()
+            sys.exit(0)
 
-       if '-v' in opt:
-           verbose = True
+        if '-v' in opt:
+            verbose = True
 
     if not (target and len(node_list) > 0):
         target = get_last_target(node_list)
@@ -351,4 +364,3 @@ if __name__ == "__main__":
                 time.sleep(1)
 
     log.close()
-
