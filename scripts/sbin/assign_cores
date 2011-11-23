@@ -21,7 +21,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys, os, pwd
+import sys
+import os
+import pwd
 import getopt
 import commands
 
@@ -29,7 +31,8 @@ import commands
 min_mem = 10.0
 min_cpu = 10.0
 
-username = pwd.getpwuid(os.getuid()) [0]
+username = pwd.getpwuid(os.getuid())[0]
+
 
 def usage():
     print "usage: assign_cores [-c] [-f] [-v] [-x] [-u <user>]"
@@ -53,27 +56,27 @@ if __name__ == "__main__":
         opts, args = getopt.getopt(sys.argv[1:], "cvxfu:")
     except getopt.GetoptError, err:
         # print help information and exit:
-        print str(err) # will print something like "option -a not recognized"
+        print str(err)   # will print something like "option -a not recognized"
         usage()
         sys.exit(2)
 
     for opt in opts:
 
-       if '-c' in opt:
-           check_only = True
+        if '-c' in opt:
+            check_only = True
 
-       if '-u' in opt:
-           only_user = True
-           user_list.add(opt[1])
+        if '-u' in opt:
+            only_user = True
+            user_list.add(opt[1])
 
-       if '-f' in opt:
-           force = True
+        if '-f' in opt:
+            force = True
 
-       if '-v' in opt:
-           verbose = True
+        if '-v' in opt:
+            verbose = True
 
-       if '-x' in opt:
-           very_verbose = True
+        if '-x' in opt:
+            very_verbose = True
 
     if username != "root":
         only_user = True
