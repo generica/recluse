@@ -2,7 +2,7 @@
 
 # node_timeline
 #
-# investigate PBS logs, and print a timeline of what jobs 
+# investigate PBS logs, and print a timeline of what jobs
 # ran on a node
 #
 # Written by Brett Pemberton, brett@vpac.org
@@ -22,7 +22,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import datetime
-import sys, os, pwd
+import sys
+import os
+import pwd
 import getopt
 
 pbs_dir = "/usr/spool/PBS"
@@ -31,19 +33,23 @@ print_exec_host = False
 verbose = False
 joblist = []
 
+
 def usage():
     print "usage: node_timeline [-e] [-v] [-n number of days] node"
     print "   -e : print exec_host"
     print "   -v : verbose"
     sys.exit(0)
 
+
 def job_exists(job):
     if joblist.count(job) == 1:
         return True
 
+
 def add_job(job):
     if joblist.count(job) == 0:
         joblist.append(job)
+
 
 def remove_job(job):
     if joblist.count(job) == 1:
@@ -51,6 +57,7 @@ def remove_job(job):
         return True
     else:
         return False
+
 
 def process_line(line, status):
     if verbose:
@@ -62,11 +69,11 @@ def process_line(line, status):
     if status == 'D':
         user = splitline[1].split('=')[1]
         if remove_job(job) == True:
-             print date + " " + time + " job " + job + " deleted by " + user
+            print date + " " + time + " job " + job + " deleted by " + user
         return
     if status == 'A':
         if remove_job(job) == True:
-             print date + " " + time + " job " + job + " aborted"
+            print date + " " + time + " job " + job + " aborted"
         return
     user = splitline[1].split('=')[1]
     exec_host = splitline[11].split('=')[1]
@@ -94,6 +101,7 @@ def process_line(line, status):
                 print "Ignore previous start"
                 remove_job(job)
 
+
 def process_log(logfile):
     if verbose:
         print "looking at log: " + logfile
@@ -117,7 +125,7 @@ if __name__ == "__main__":
         opts, args = getopt.getopt(sys.argv[1:], "n:ev")
     except getopt.GetoptError, err:
         # print help information and exit:
-        print str(err) # will print something like "option -a not recognized"
+        print str(err)       # will print something like "option -a not recognized"
         usage()
         sys.exit(2)
 
@@ -138,13 +146,13 @@ if __name__ == "__main__":
 
     node = args[0]
 
-    today =  datetime.date.today()
+    today = datetime.date.today()
 
     for i in range(int(number_of_days), -1, -1):
         difference = datetime.timedelta(days=i)
         current = today - difference
 
-        currentlog =  current.strftime("%Y%m%d")
+        currentlog = current.strftime("%Y%m%d")
 
         process_log(pbs_dir + "/server_priv/accounting/" + currentlog)
 
