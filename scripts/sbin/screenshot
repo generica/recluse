@@ -20,7 +20,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import pycurl, StringIO, sys, os.path
+import pycurl
+import StringIO
+import sys
+import os.path
 import getopt
 
 # Constants
@@ -29,33 +32,34 @@ LOGIN_POST_DATA = 'login=ADMIN&password=ADMIN&action_login=Login'
 HOME2_POST_DATA = 'action_preview_refresh=Refresh'
 FILE_MODE = 'wb'
 
+
 def get_screenshot(hostname, filename=False):
 
-        LOGIN_URL = 'http://' + hostname + '-m/auth.asp'
-	HOME2_URL = 'http://' + hostname + '-m/home2.asp'
-	DOWNLOAD_URL = 'http://' + hostname + '-m/screenshot.jpg'
-	DOWNLOAD_REFERER = 'http://' + hostname + '-m/home.asp'
+    LOGIN_URL = 'http://' + hostname + '-m/auth.asp'
+    HOME2_URL = 'http://' + hostname + '-m/home2.asp'
+    DOWNLOAD_URL = 'http://' + hostname + '-m/screenshot.jpg'
+    DOWNLOAD_REFERER = 'http://' + hostname + '-m/home.asp'
 
-        # Set up objects
-        dev_null = StringIO.StringIO()
-        slurpp = pycurl.Curl()
+    # Set up objects
+    dev_null = StringIO.StringIO()
+    slurpp = pycurl.Curl()
 
-	if not filename:
-		filename = hostname + ".jpg"
+    if not filename:
+        filename = hostname + ".jpg"
 
         if os.path.exists(filename):
-                i = 1
-		if filename.endswith('.jpg'):
-	                newfilename = filename[0:len(filename)-4] + '-' + str(i) + '.jpg'
-		else:
-			newfilename = filename + '-' + str(i) + '.jpg'
-                while os.path.exists(newfilename):
-                        i += 1
-                        newfilename = filename[0:len(filename)-4] + '-' + str(i) + '.jpg'
+            i = 1
+        if filename.endswith('.jpg'):
+            newfilename = filename[0:len(filename) - 4] + '-' + str(i) + '.jpg'
+        else:
+            newfilename = filename + '-' + str(i) + '.jpg'
+            while os.path.exists(newfilename):
+                i += 1
+                newfilename = filename[0:len(filename) - 4] + '-' + str(i) + '.jpg'
                 print 'WARNING: ' + filename + ' exists, using ' + newfilename + ' instead'
                 filename = newfilename
         else:
-                print 'writing to ' + filename
+            print 'writing to ' + filename
 
         # Request login page
         slurpp.setopt(pycurl.USERAGENT, USER_AGENT)
@@ -64,69 +68,70 @@ def get_screenshot(hostname, filename=False):
         slurpp.setopt(pycurl.COOKIEFILE, '')
         slurpp.setopt(pycurl.URL, LOGIN_URL)
         slurpp.setopt(pycurl.PROXY, '')
-	try:
-	        slurpp.perform()
-	except pycurl.error, e:
-		print 'ERROR: Cannot connect to host: ' + hostname
-		print "Error code: ", e[0]
-		print "Error message: ", e[1]
-		return
+    try:
+        slurpp.perform()
+    except pycurl.error, e:
+        print 'ERROR: Cannot connect to host: ' + hostname
+        print "Error code: ", e[0]
+        print "Error message: ", e[1]
+        return
 
         # Log in to site
         slurpp.setopt(pycurl.POSTFIELDS, LOGIN_POST_DATA)
         slurpp.setopt(pycurl.POST, 1)
         slurpp.perform()
 
-	# Go to home2, request refresh
-	slurpp.setopt(pycurl.URL, HOME2_URL)
-	slurpp.setopt(pycurl.POSTFIELDS, HOME2_POST_DATA)
-	slurpp.setopt(pycurl.POST, 1)
-	slurpp.perform()
+    # Go to home2, request refresh
+    slurpp.setopt(pycurl.URL, HOME2_URL)
+    slurpp.setopt(pycurl.POSTFIELDS, HOME2_POST_DATA)
+    slurpp.setopt(pycurl.POST, 1)
+    slurpp.perform()
 
-        # Download relevant data
-        slurpp.setopt(pycurl.HTTPGET, 1)
-        slurpp.setopt(pycurl.URL, DOWNLOAD_URL)
-        slurpp.setopt(pycurl.REFERER, DOWNLOAD_REFERER)
-        outfile = file(filename, FILE_MODE)
-        slurpp.setopt(pycurl.WRITEFUNCTION, outfile.write)
-        slurpp.perform()
+    # Download relevant data
+    slurpp.setopt(pycurl.HTTPGET, 1)
+    slurpp.setopt(pycurl.URL, DOWNLOAD_URL)
+    slurpp.setopt(pycurl.REFERER, DOWNLOAD_REFERER)
+    outfile = file(filename, FILE_MODE)
+    slurpp.setopt(pycurl.WRITEFUNCTION, outfile.write)
+    slurpp.perform()
 
-        # Clean up and close out
-        outfile.close()
-        dev_null.close()
-        slurpp.close()
+    # Clean up and close out
+    outfile.close()
+    dev_null.close()
+    slurpp.close()
+
 
 def usage():
-	print "usage: screenshot -n node [-n node] -f filename"
-	print "   -n : hostname of node to grab screenshot of"
-	print "   -f : file to save screenshot to"
-	sys.exit(0)
+    print "usage: screenshot -n node [-n node] -f filename"
+    print "   -n : hostname of node to grab screenshot of"
+    print "   -f : file to save screenshot to"
+    sys.exit(0)
 
 if __name__ == "__main__":
 
-	node_list = set()
-	filename = False
+    node_list = set()
+    filename = False
 
-	try:
-		opts, args = getopt.getopt(sys.argv[1:], "f:n:")
-	except getopt.GetoptError, err:
-		# print help information and exit:
-		print str(err) # will print something like "option -a not recognized"
-		usage()
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "f:n:")
+    except getopt.GetoptError, err:
+        # print help information and exit:
+        print str(err)        # will print something like "option -a not recognized"
+        usage()
 
-	for opt in opts:
+    for opt in opts:
 
-		if '-f' in opt:
-			filename = opt[1]
+        if '-f' in opt:
+            filename = opt[1]
 
-		if '-n' in opt:
-			node_list.add(opt[1])
+        if '-n' in opt:
+            node_list.add(opt[1])
 
-	if len(node_list) == 0:
-		usage()
+    if len(node_list) == 0:
+        usage()
 
-	if len(node_list) == 1:
-		get_screenshot(node_list.pop(), filename)
+    if len(node_list) == 1:
+        get_screenshot(node_list.pop(), filename)
 
-	for node in node_list:
-		get_screenshot(node)
+    for node in node_list:
+        get_screenshot(node)
