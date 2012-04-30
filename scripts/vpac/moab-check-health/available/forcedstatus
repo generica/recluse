@@ -1,0 +1,39 @@
+#!/bin/bash
+
+CONFIG=/usr/local/recluse/config
+[ -r "$CONFIG" ] || echo "Can't source $CONFIG"
+[ -r "$CONFIG" ] || exit 0
+source $CONFIG
+
+hostname=$(hostname)
+busy=$(/usr/local/recluse/scripts/bin/whatson -s | wc -l)
+found=0
+
+if [ $busy -eq 0 ]
+then
+	for file in /usr/local/recluse/nodestatus/forcestatus/$hostname-*
+	do
+		kernel=$(echo $file | egrep -c -- "-kernel$")
+		if [ $kernel -eq 1 ]
+		then
+			continue
+		fi
+		mce=$(echo $file | egrep -c -- "-mce$")
+		if [ $mce -eq 1 ]
+		then
+			continue
+		fi
+		glob=$(echo $file | egrep -c -- "-\*$")
+		if [ $glob -eq 1 ]
+		then
+			continue
+		fi
+		found=1
+	done
+
+	if [ $found -ne 0 ]
+	then
+		echo "ERROR Forced status exists, node should be rebooted"
+		exit 1
+	fi
+fi

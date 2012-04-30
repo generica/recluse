@@ -1,0 +1,13 @@
+#!/bin/bash
+
+tmp=$(df -lP | grep /tmp | awk '{print $5}' | awk -F% '{print $1}')
+
+if [ x"$tmp" != "x" ]
+then
+        if [ $tmp -gt 90 ]
+        then
+                echo "ERROR tmp is almost full"
+                exit 1
+        fi
+fi
+

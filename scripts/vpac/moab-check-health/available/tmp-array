@@ -1,0 +1,28 @@
+#!/bin/bash
+
+CONFIG=/usr/local/recluse/config
+[ -r "$CONFIG" ] || echo "Can't source $CONFIG"
+[ -r "$CONFIG" ] || exit 0
+source $CONFIG
+
+if test "${HAS_TMP_ARRAY+set}" = set;
+then
+        host_tmp_array=$HAS_TMP_ARRAY
+else
+        host_tmp_array=0
+fi
+
+if [ $host_tmp_array -eq 1 ]
+then
+
+	count=$(egrep -c "^/dev/md. /tmp " /proc/mounts)
+
+	if [ $count -ne 1 ]
+	then
+		echo "ERROR /tmp not mounted from /dev/md1!"
+		exit 1
+	fi
+
+fi
+
+exit 0

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+if [ -x /usr/local/sbin/mce ]; then
+        /usr/local/sbin/mce
+	exit $?
+fi

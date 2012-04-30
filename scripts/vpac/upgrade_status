@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# upgrade_status
+#
+# Check for motherboard and CPU upgrade status
+#
+# Written by Brett Pemberton, brett@vpac.org
+# Copyright (C) 2009 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+upgraded_bios="06/02/2009"
+running_bios=$(/usr/sbin/dmidecode -t 0 | grep Release | awk '{print $3}')
+cpu=$(grep Opteron -m1 /proc/cpuinfo | awk '{print $8}')
+intel=$(grep Intel -c -m1 /proc/cpuinfo)
+exit=0
+
+if [ $intel -eq 1 ]
+then
+	exit 0
+fi
+
+if [ $upgraded_bios != $running_bios ]
+then
+	echo "Motherboard requires upgrade"
+	exit=1
+fi
+
+if [ $cpu != "2376" -a $cpu != "2379" ]
+then
+	echo "CPU requires upgrade"
+	exit=1
+fi
+
+exit $exit

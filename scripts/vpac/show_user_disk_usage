@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# Written by Brett Pemberton (brett@vpac.org)
+# Copyright (C) 2009 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+if [ $# -ne 1 ]
+then
+	echo "usage: $0 <username>"
+	exit 1
+fi
+
+user=$1
+
+if [ ! -d /home/$user ]
+then
+	# Home link doesn't exist, we have no idea what partition they're on
+	exit 2
+fi
+
+disk="/nfs/$(stat -c '%N' /home/$user | awk -F/ '{print $5}')"
+
+if [ $USER == "root" ]
+then
+	usage=$(quota -v -w $user 2>&1 | grep $disk | head -n 1| awk '{ print $2 }')
+else
+	usage=$(quota -v -w -f $disk 2>&1 | grep "stg" | awk '{ print $2 }')
+fi
+
+if [ x"$usage" == "xerror" ]
+then
+	if [ -e /home/$user/.usage ]
+	then
+		usage=$(cat /home/$user/.usage)
+	fi
+fi
+
+count_asterix=$(echo "$usage" | grep -c "*")
+if [ $count_asterix -eq 1 ]
+then
+	usage=$(echo $usage | sed 's/*$//')
+fi
+
+echo $usage

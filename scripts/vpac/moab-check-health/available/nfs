@@ -1,0 +1,11 @@
+#!/bin/bash
+
+perl /usr/local/recluse/scripts/vpac/nfs_monitor.pl
+
+if [ $? -ne 0 ]
+then
+	echo "ERROR hung nfs partition"
+	exit 1
+fi
+
+exit 0

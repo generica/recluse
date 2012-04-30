@@ -1,0 +1,23 @@
+#!/bin/bash
+
+CONFIG=/usr/local/recluse/config
+[ -r "$CONFIG" ] || echo "Can't source $CONFIG"
+[ -r "$CONFIG" ] || exit 0
+source $CONFIG
+
+busy=$(/usr/local/recluse/scripts/bin/whatson -s | wc -l)
+
+kernel=$(uname -r)
+
+count=$(echo $bad_kernel_list | grep -cw $kernel)
+
+if [ $count -ne 0 ]
+then
+	if [ $busy -eq 0 ]; then
+		echo "ERROR known bad kernel installed (node free)"
+	else
+		echo "ERROR known bad kernel installed (node busy)"
+	fi
+	exit 1
+fi
+

@@ -1,0 +1,185 @@
+#! /usr/bin/env python
+
+# jobsfinished
+#
+# Find when a user, or group of users will have all their jobs finished
+#
+# Written by Brett Pemberton, brett@vpac.org
+# Copyright (C) 2009 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import sys
+import pbs
+from PBSQuery import PBSQuery
+import getopt
+
+verbose = False
+default_hosts = ['tango-m', 'edda-m', 'wexstan']
+
+def secs_to_split(s, pad):
+    days = s / 86400
+    hours = (s - (days * 86400)) / 3600
+    mins  = (s - (days * 86400) - (hours * 3600)) / 60
+    secs  = (s - (days * 86400) - (hours * 3600) - (mins * 60))
+
+    if not pad:
+        return days, hours, mins, secs
+    else:
+        if len(str(days)) == 1:
+            d_days = "0%s" % (days)
+        else:
+            d_days = days
+        if len(str(hours)) == 1:
+            d_hours = "0%s" % (hours)
+        else:
+            d_hours = hours
+        if len(str(mins)) == 1:
+            d_mins = "0%s" % (mins)
+        else:
+            d_mins = mins
+        if len(str(secs)) == 1:
+            d_secs = "0%s" % (secs)
+        else:
+            d_secs = secs
+        return d_days, d_hours, d_mins, d_secs
+
+def compare_times(walltime, usedtime):
+    used_split = usedtime.split(':')
+    used_hours = used_split[0]
+    used_mins = used_split[1]
+    used_secs = used_split[2]
+    
+    walltime_split = walltime.split(':')
+    walltime_hours = walltime_split[0]
+    walltime_mins = walltime_split[1]
+    walltime_secs = walltime_split[2]
+
+    left_secs = int(walltime_secs) - int(used_secs)
+    left_mins = int(walltime_mins) - int(used_mins)
+    left_hours = int(walltime_hours) - int(used_hours)
+
+    if left_secs < 0:
+        left_secs += 60
+        left_mins -= 1
+    if left_mins < 0:
+        left_mins += 60
+        left_hours -= 1
+
+    full_seconds_left = left_secs + (left_mins * 60) + (left_hours * 3600)
+    return full_seconds_left
+
+def get_jobs_from_server(users, server):
+
+    longest_seconds_left = 0
+    worst_user = ""
+
+    p = PBSQuery(server=server)
+    jobs = p.getjobs()
+    for name, job in jobs.items():
+        if job['job_state'] == "R":
+            if 'euser' in job:
+                username = job['euser']
+            elif 'Job_Owner' in job:
+                username = job['Job_Owner'].split('@')[0]
+            else:
+                username = 'Unknown'
+
+            if username in users or users == "All":
+                if 'Resource_List.walltime' in job:
+                    walltime = job['Resource_List.walltime']
+                else:
+                    print "ERROR: No walltime for this job:"
+                    print job
+                    continue
+#                    sys.exit(-1)
+                if 'resources_used.walltime' in job:
+                    usedtime = job['resources_used.walltime']
+                else:
+                    print "ERROR: No used time for this job:"
+                    print job
+                    continue
+#                    sys.exit(-1)
+                seconds_remaining = compare_times(walltime, usedtime)
+                if verbose:
+                    d, h, m, s = secs_to_split(seconds_remaining, True)
+                    print "%s - %s from %s - %s:%s:%s:%s - %s" % (username, usedtime, walltime, d, h, m, s, seconds_remaining)
+                if seconds_remaining > longest_seconds_left:
+                    longest_seconds_left = seconds_remaining
+                    worst_user = username
+
+    return longest_seconds_left, worst_user
+
+if __name__ == "__main__":
+
+    hosts = []
+    users = []
+    bad_cluster = "none"
+
+    opts, args = getopt.getopt(sys.argv[1:], 'vu:f:hac:')
+
+    for opt in opts:
+        if '-v' in opt:
+            verbose = True
+
+        if '-a' in opt:
+            users = 'All'
+
+        if '-h' in opt:
+            print "usage: jobsfinished [-v] <-f filename | -u username | -a> [-c cluster]"
+            print "\t-f filename\tRead userlist from filename"
+            print "\t-c\t\tcluster"
+            print "\t-u\t\tusername"
+            print "\t-a\t\tall users"
+            print "\t-v\t\tverbose output"
+            print "\t-h\t\tshow help message"
+            sys.exit(-1)
+
+        if '-c' in opt:
+            hosts.append(opt[1])
+
+        if '-u' in opt:
+            users.append(opt[1])
+
+        if '-f' in opt:
+            filename = opt[1]
+            userfile = open(filename, 'r')
+            our_userlist = userfile.readlines()
+            users = [x.replace('\n', '') for x in our_userlist]
+
+    if users == []:
+        print "ERROR: No users specified. Please use -u, -a or -f"
+        sys.exit(-1)
+    elif verbose:
+        print "Userlist: %s" % (users)
+
+    longest_seconds_left = 0
+
+    if len(hosts) == 0:
+        hosts = default_hosts
+
+    for host in hosts:
+        if verbose:
+            print "Checking %s:" % (host)
+        seconds_left_on_host, user_responsible = get_jobs_from_server(users, host)
+        if seconds_left_on_host > longest_seconds_left:
+            longest_seconds_left = seconds_left_on_host
+            bad_user = user_responsible
+            bad_cluster = host
+
+    if longest_seconds_left == 0:
+        print "No jobs running"
+    else:
+        d, h, m, s = secs_to_split(longest_seconds_left, False)
+        print "%s seconds [%s days, %s hours, %s mins, %s seconds], thanks to user %s on %s" % (longest_seconds_left, d, h, m, s, bad_user, bad_cluster)

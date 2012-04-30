@@ -1,0 +1,14 @@
+#!/bin/bash
+
+clear
+
+echo "The email address you have registered with VPAC is incorrect."
+echo ""
+echo "Your account has been locked, until the email address is changed"
+echo "to one that we can contact you on."
+echo ""
+echo "Please email help@vpac.org to arrange changing your email address."
+
+sleep 60
+
+exit 1

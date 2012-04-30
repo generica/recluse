@@ -1,0 +1,96 @@
+#!/usr/local/sbin/known_good_python -E
+
+# Written by Brett Pemberton (brett@vpac.org), Sam Morrison (sam@vpac.org)
+# Copyright (C) 2009 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import xmlrpclib
+import sys, os, pwd
+import getopt
+
+url = 'https://wwwd.vpac.org/accounts/xmlrpc/'
+our_username = pwd.getpwuid(os.getuid()) [0]
+action = False
+auth_password = 'BioVae6e'
+auth_username = 'vbacker'
+
+def lock_user(t_username):
+    server = xmlrpclib.Server(url)
+
+    try:
+        server.lock_user(auth_username, auth_password, t_username)
+    except Exception, err:
+        print >> sys.stderr, "ERROR: Can't contact the vpac.org accounts system.  Sorry, but accounts cannot be modified at present.\nPlease try again later"
+        print >> sys.stderr, err
+        sys.exit(-1)
+
+def unlock_user(t_username):
+    server = xmlrpclib.Server(url)
+
+    try:
+        server.unlock_user(auth_username, auth_password, t_username)
+    except Exception, err:
+        print >> sys.stderr, "ERROR: Can't contact the vpac.org accounts system.  Sorry, but accounts cannot be modified at present.\nPlease try again later"
+        print >> sys.stderr, err
+        sys.exit(-1)
+
+def usage():
+    print "usage: accountmod <-l | -u> USERNAME"
+    print "\t-l\tlock account"
+    print "\t-u\tunlock account"
+    print "\t-h\tshow help message"
+    sys.exit(-1)
+
+if __name__ == "__main__":
+    opts, args = getopt.getopt(sys.argv[1:], 'lu')
+    opts = dict(opts)
+
+    if '-u' in opts:
+        if '-l' in opts:
+            print "ERROR: only specify one of <-l or -u>"
+            usage()
+            sys.exit(-1)
+        action = "unlock"
+
+    if '-l' in opts:
+        if '-u' in opts:
+            print "ERROR: only specify one of <-l or -u>"
+            usage()
+            sys.exit(-1)
+        action = "lock"
+
+    if '-h' in opts:
+        usage()
+
+    username = args[0]
+
+    if our_username == "root":
+        if username:
+            if action:
+                if action == "unlock":
+                    unlock_user(username)
+                else:
+                    lock_user(username)
+            else:
+                print "ERROR: You did not supply an action"
+                usage()
+                sys.exit(-1)
+        else:
+            print "ERROR: You did not supply a username"
+            usage()
+            sys.exit(-1)
+    else:
+        print "You are not running this as root."
+        sys.exit(-1)

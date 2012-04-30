@@ -1,0 +1,74 @@
+#!/bin/bash
+
+CONFIG=/usr/local/recluse/config
+[ -r "$CONFIG" ] || echo "Can't source $CONFIG"
+[ -r "$CONFIG" ] || exit 0
+source $CONFIG
+
+if test "${HAS_INTERCONNECT+set}" = set;
+then
+	host_interconnect=$HAS_INTERCONNECT
+else
+	host_interconnect=1
+fi
+
+if [ $host_interconnect -eq 1 ]
+then
+
+	count=$(/sbin/lspci -v -d "14c1:" | grep "Memory" | sed 's/.*(\(.*\),.*/\1/')
+        # should be 64-bit
+
+	if [ "$count" != "64-bit" ]
+	then
+		echo "ERROR myrinet card is not in 64bit mode"
+		exit 1
+	fi
+
+	gm_board_info=/sbin/gm_board_info
+
+	if [ ! -x $gm_board_info ]
+	then
+		echo "ERROR gm_board_info not found"
+		exit 1
+	fi
+
+	MYRIFILE=$(mktemp) || exit 1
+	$gm_board_info > $MYRIFILE
+
+	count=$(wc -l $MYRIFILE | awk '{print $1}')
+
+	# We want at least 5 lines, otherwise the board may not have been initialised
+
+	if [ $count -lt 5 ]
+	then
+		echo "ERROR myrinet board not initialised"
+		rm -f $MYRIFILE
+		exit 1
+	fi
+
+        # try to make sure it sees other nodes
+
+	if [ $count -lt 50 ]
+	then
+		echo "ERROR myrinet board not seeing other hosts"
+		rm -f $MYRIFILE
+		exit 1
+	fi
+
+	count=$(grep -c "Could not get host name: " $MYRIFILE)
+
+	# 20 is an arbitrary number.
+	# there is generally one timeout for every port on the switch that _was_ once active but now isn't
+	# so around 0-3 is acceptable
+	# if the board on this machine has died, then it will generally have over 100 matches
+
+	if [ $count -gt 20 ]
+	then
+		echo "ERROR myrinet board timing out on hosts"
+		rm -f $MYRIFILE
+		exit 1
+	fi
+
+	rm -f $MYRIFILE
+
+fi

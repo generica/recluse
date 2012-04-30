@@ -1,0 +1,10 @@
+#!/bin/bash
+
+count=$(grep -c "acpi=off" /proc/cmdline)
+
+if [ $count -ne 0 ]
+then
+	echo "ERROR ACPI disabled by acpi=off kernel boot option"
+	exit 1
+fi
+

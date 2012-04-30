@@ -1,0 +1,15 @@
+#!/bin/bash
+
+DMESGFILE=$(mktemp) || exit 1
+dmesg > $DMESGFILE
+
+count=$(grep -c "unable to enumerate USB device on port" $DMESGFILE)
+
+if [ $count -ne 0 -a ! -e /usr/local/recluse/nodestatus/forcestatus/$(hostname)-usb ]
+then
+        echo "ERROR kernel detected weird usb problem"
+	rm -f $DMESGFILE
+        exit 1
+fi
+
+rm -f $DMESGFILE

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+clear
+
+echo "Your password has been detected as being insecure."
+echo ""
+echo "Your account has been locked, until the password is changed"
+echo "to an acceptable level of security."
+echo ""
+echo "Please email help@vpac.org to arrange changing your password."
+
+sleep 60
+
+exit 1

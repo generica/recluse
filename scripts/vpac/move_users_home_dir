@@ -1,0 +1,205 @@
+#!/bin/bash
+
+# move_users_home_dir
+
+# move a user from one storage server to another
+
+# Written by Brett Pemberton (brett@vpac.org)
+# Copyright (C) 2009 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+export PATH=$PATH:/usr/local/bin:/usr/local/sbin
+
+perform_move=0
+perform_sync=0
+silent=0
+
+if [ -e /usr/bin/rsync ]; then rsync=/usr/bin/rsync; fi
+if [ -e /usr/local/rsync/3.0.5/bin/rsync ]; then rsync=/usr/local/rsync/3.0.5/bin/rsync; fi
+
+function usage {
+	echo "usage: $0 [-r] <username>"
+	echo "         -r: rsync anyway"
+}
+
+if [ $# -eq 2 ]
+then
+	if [ "$1" == "-r" ]
+	then
+		perform_sync=1
+		username=$2
+	elif [ "$1" == "-s" ]
+	then
+		silent=1
+		username=$2
+	else
+		usage
+		exit 1
+	fi
+elif [ $# -eq 1 ]
+then
+	username=$1
+else
+	usage
+	exit 1
+fi
+
+# check if they have a home directory
+
+home=$(getent passwd $username | awk -F: '{print $6}')
+if [ x"$home" == "x" ]
+then
+	echo "ERROR: username $username doesn't appear valid"
+	exit 1
+fi
+
+current_home_dir_server=$(stat -c '%N' /home/$username | awk '{print $3}' | awk -F/ '{print $3}')
+old_home_dir=$(stat -c '%n' /nfs/ibm/$username)
+new_home_dir=$(stat -c '%n' /nfs/user*/$username)
+
+if [ $current_home_dir_server != "ibm" ]
+then
+	echo "ERROR: $username is already moved to the new server"
+	exit 1
+fi
+
+if [ $(echo $new_home_dir | wc -l) -ne 1 ]
+then
+	echo "ERROR: $username doesn't have a directory in the new system"
+	exit 1
+fi
+
+echo "About to move $username from $old_home_dir to $new_home_dir"
+
+# check if they are running any jobs
+
+jobs=$(/usr/local/bin/qstat -u $username @tango-m @wexstan @edda-m | egrep -c "^[0-9]")
+if [ $jobs -gt 0 ]
+then
+	echo -n "ERROR: user $username is running jobs: "
+	if [ $silent -eq 0 ]
+	then
+		echo
+		/usr/local/bin/qstat -u $username @tango-m @wexstan @edda-m | egrep "^[0-9]"
+	else 
+		/usr/local/bin/qstat -u $username @tango-m @wexstan @edda-m | egrep "^[0-9]" | wc -l
+	fi
+	perform_move=1
+fi
+
+# check if they are logged in
+
+logged_in_tango=$(ssh tango "ps h U $username" | wc -l)
+logged_in_edda=$(ssh edda "ps h U $username" | wc -l)
+logged_in_wexstan=$(ssh wexstan "ps h U $username" | wc -l)
+
+if [ $logged_in_tango -gt 0 ]
+then
+	echo "ERROR: $username is logged in to tango"
+	perform_move=1
+fi
+
+if [ $logged_in_edda -gt 0 ]
+then
+	echo "ERROR: $username is logged in to edda"
+	perform_move=1
+fi
+
+if [ $logged_in_wexstan -gt 0 ]
+then
+	echo "ERROR: $username is logged in to wexstan"
+	perform_move=1
+fi
+
+if [ $perform_move -eq 0 ]
+then
+	# lock their account
+
+	echo "No jobs running, not logged in, locking their account"
+
+	/usr/local/recluse/scripts/vpac/accountmod -l $username
+	if [ $? -ne 0 ]
+	then
+		echo "An error occurred, bailing out"
+		exit 1
+	fi
+
+	# check if they are running any jobs
+
+	jobs=$(/usr/local/bin/qstat -u $username @tango-m @wexstan @edda-m | egrep -c "^[0-9]")
+	if [ $jobs -gt 0 ]
+	then
+		echo "RACE CONDITION: user $username is running jobs:"
+		/usr/local/bin/qstat -u $username @tango-m @wexstan @edda-m | egrep "^[0-9]"
+		/usr/local/recluse/scripts/vpac/accountmod -u $username
+		exit 1
+	fi
+
+	# check if they are logged in
+
+	logged_in_tango=$(ssh tango "ps h U $username" | wc -l)
+	logged_in_edda=$(ssh edda "ps h U $username" | wc -l)
+	logged_in_wexstan=$(ssh wexstan "ps h U $username" | wc -l)
+
+	if [ $logged_in_tango -gt 0 ]
+	then
+		echo "ERROR: $username is logged in to tango"
+		/usr/local/recluse/scripts/vpac/accountmod -u $username
+		exit 1
+	elif [ $logged_in_edda -gt 0 ]
+	then
+		echo "ERROR: $username is logged in to edda"
+		/usr/local/recluse/scripts/vpac/accountmod -u $username
+		exit 1
+	elif [ $logged_in_wexstan -gt 0 ]
+	then
+		echo "ERROR: $username is logged in to wexstan"
+		/usr/local/recluse/scripts/vpac/accountmod -u $username
+		exit 1
+	fi
+fi
+
+if [ $perform_move -eq 0 -o $perform_sync -eq 1 ]
+then
+	echo "About to rsync their data using $rsync"
+
+	# rsync their home directory
+
+	$rsync -va --delete $old_home_dir/ $new_home_dir
+fi
+
+if [ $perform_move -eq 0 ]
+then
+	# update the home directory symlinks on all clusters
+
+	echo "Updating symlink farms"
+
+	for dir in /srv/homes/*;
+	do 
+		echo $(basename $dir)
+		rm -fv $dir/$username && ln -sv $new_home_dir $dir/$username
+	done
+
+	# unlock their account
+
+	echo "All done, unlocking their account"
+
+	/usr/local/recluse/scripts/vpac/accountmod -u $username
+	if [ $? -ne 0 ]
+	then
+		echo "An error occurred, bailing out"
+		exit 1
+	fi
+fi

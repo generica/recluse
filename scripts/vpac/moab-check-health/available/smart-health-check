@@ -1,0 +1,38 @@
+#!/bin/bash
+
+CONFIG=/usr/local/recluse/config
+[ -r "$CONFIG" ] || echo "Can't source $CONFIG"
+[ -r "$CONFIG" ] || exit 0
+source $CONFIG
+
+drives=""
+faultydrives=""
+
+if [ x"$SMART_DRIVES" != "x" ]
+then
+	drives=$SMART_DRIVES
+fi
+
+count=0
+
+if [ -x /usr/sbin/smartctl ]
+then
+	for drive in $drives
+	do
+		offline=$(/usr/sbin/smartctl -a $smart_options $drive | grep "^198" | awk '{print $10}')
+		/usr/sbin/smartctl $smart_options -H $drive > /dev/null
+		this_count=$[$offline+$?]
+		if [ $this_count -ne 0 ]
+		then
+			faulty_drives="$faulty_drives $drive"
+			count=$[$count+$this_count]
+		fi
+        done
+fi
+
+if [ $count -ne 0 ]
+then
+        echo "ERROR SMART has detected a hard drive problem in$faulty_drives"
+        exit 1
+fi
+

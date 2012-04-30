@@ -1,0 +1,10 @@
+#!/bin/bash
+
+count=$(dmesg | grep -c "IPMI message handler: Event queue full, discarding an incoming event")
+
+if [ $count -ne 0 ]
+then
+	echo "ERROR ipmi card failures"
+	exit 1
+fi
+

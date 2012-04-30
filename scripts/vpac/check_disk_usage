@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# check_disk_usage
+#
+# warn users who are using too much disk space
+
+# Written by Brett Pemberton (brett@vpac.org), Sam Morrison (sam@vpac.org)
+# Copyright (C) 2008 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+usage=$(/usr/local/recluse/scripts/vpac/show_user_disk_usage $USER | awk '{printf ("%.0f", $1 / (1024*1024))}')
+
+if [ x"$usage" == "x" ]
+then
+	echo -e "\n\aQuota system down!"
+	exit 1
+fi
+
+if [ $usage -gt 1000 ]
+then
+	echo -e "\n\aYou are using more than 1 TB of disk space!"
+	echo -e "\nPlease clean up immediately!\n"
+elif [ $usage -gt 200 ]
+then
+	echo -e "\n\aYou are using more than 200 GB of disk space!"
+	echo -e "\nPlease reduce your usage urgently!\n"
+	#echo -e "\nYou will not be able to submit jobs until you have reduced your disk usage\n"
+elif [ $usage -gt 100 ]
+then
+	echo -e "\n\aYou are using more than 100 GB of disk space!"
+	echo -e "\nPlease take steps to check that this is necessary\n"
+elif [ $usage -gt 50 ]
+then
+	echo -e "\n\aYou are using more than 50 GB of disk space!"
+	echo -e "\nPlease take steps to check that this is necessary\n"
+fi
+
+if [ $usage -gt 50 ]
+then
+	if [ -n "$PBS_O_WORKDIR" ]; then
+		echo -e ' *** THIS MESSAGE DOES NOT AFFECT THE RUNNING OF THIS JOB ! ***\n'
+	fi
+fi
+

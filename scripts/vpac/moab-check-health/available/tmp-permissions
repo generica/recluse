@@ -1,0 +1,10 @@
+#!/bin/bash
+
+tmp_perm=$(stat --format "%a" /tmp)
+perm="1777"
+
+if [ ${tmp_perm} -ne ${perm} ]
+then
+	echo "Permissions on /tmp should be '$perm' but are currently '$tmp_perm'"
+	exit 1
+fi

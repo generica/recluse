@@ -1,0 +1,11 @@
+#!/bin/bash
+
+clear
+
+echo "* This account has been locked. *"
+echo "* Please contact the VPAC Systems Team on (03) 9925 4733. *"
+echo "* Or via help@vpac.org *"
+
+sleep 30
+
+exit

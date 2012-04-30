@@ -1,0 +1,12 @@
+#!/bin/bash
+
+usr=$(df -lP | grep /usr/spool | awk '{print $5}' | awk -F% '{print $1}')
+
+if [ x"$usr" != "x" ]
+then
+        if [ $usr -gt 90 ]
+        then
+                echo "ERROR spool partition is almost full"
+                exit 1
+        fi
+fi

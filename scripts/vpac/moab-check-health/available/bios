@@ -1,0 +1,49 @@
+#!/bin/bash
+
+CONFIG=/usr/local/recluse/config
+[ -r "$CONFIG" ] || echo "Can't source $CONFIG"
+[ -r "$CONFIG" ] || exit 0                     
+source $CONFIG
+
+if test "${LATEST_BIOS+set}" = set;
+then
+	latest_bios=$LATEST_BIOS
+else
+	exit 0
+fi
+
+if [ x"$latest_bios" == "x" ]
+then
+	exit 0
+fi
+
+running_bios=$(/usr/local/recluse/scripts/vpac/bios_release_date)
+
+if [ x"$running_bios" == "x" ]
+then
+	exit 0
+fi
+
+if [ $latest_bios != $running_bios ]
+then
+	latest_year=$(echo $latest_bios | awk -F/ '{print $3}')
+	running_year=$(echo $running_bios | awk -F/ '{print $3}')
+	latest_month=$(echo $latest_bios | awk -F/ '{print $1}')
+	running_month=$(echo $running_bios | awk -F/ '{print $1}')
+	latest_day=$(echo $latest_bios | awk -F/ '{print $2}')
+	running_day=$(echo $running_bios | awk -F/ '{print $2}')
+
+	if [ $running_year -lt $latest_year ]
+	then
+		echo "ERROR not running latest BIOS"
+		exit 1
+	elif [ $running_year -eq $latest_year -a $running_month -lt $latest_month ]
+	then
+		echo "ERROR not running latest BIOS"
+		exit 1
+	elif [ $running_year -eq $latest_year -a $running_month -eq $latest_month -a $running_day -lt $latest_day ]
+	then
+		echo "ERROR not running latest BIOS"
+		exit 1
+	fi
+fi

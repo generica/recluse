@@ -1,0 +1,10 @@
+#!/bin/bash
+
+count=$(df -h -l | egrep -c "[89][0-9]%|100%")
+
+if [ $count -ne 0 ]
+then
+	echo "ERROR a local partition is almost full"
+	exit 1
+fi
+

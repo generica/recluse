@@ -1,0 +1,28 @@
+#!/bin/bash
+
+CONFIG=/usr/local/recluse/config
+[ -r "$CONFIG" ] || echo "Can't source $CONFIG"
+[ -r "$CONFIG" ] || exit 0
+source $CONFIG
+
+if test "${HAS_CUDA+set}" = set;
+then
+	host_cuda=$HAS_CUDA
+else
+	host_cuda=0
+fi
+
+if [ $host_cuda -eq 1 ]
+then
+
+	test -c /dev/nvidia0
+
+	if [ $? -ne 0 ]
+	then
+		echo "ERROR nvidia module not loaded"
+		exit 1
+	fi
+
+fi
+
+exit 0

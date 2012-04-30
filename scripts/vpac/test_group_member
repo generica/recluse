@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# test_group_member
+#
+# test if a user is a member of the restricted software group
+# they're loading.  warn if not.
+#
+# Written by Brett Pemberton, brett@vpac.org
+# Copyright (C) 2008 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+if [ $# -ne 1 ]
+then
+	echo "usage: $0 <ldap group>"
+	exit 1
+fi
+
+group=$1
+member=0
+
+for g in $(groups)
+do
+	if [ "$g" == "$group" ]
+	then
+		member=1
+fi
+done
+
+if [ $member -eq 0 ]
+then
+	if [ "$group" == "vpac" ]
+	then
+		echo -e "\nERROR: This software is licensed for VPAC internal use only."
+		echo -e "Due to licensing restrictions, you do not have access to this software."
+		echo -e "\nPlease email help@vpac.org if you have any questions\n"
+	else
+		echo -e "\nWARNING: You are not a member of the $group group."
+		echo -e "\nDue to licensing restrictions, you currently do not have access to this software."
+		echo -e "Please visit http://www.vpac.org/users and log in with your cluster username and password"
+		echo -e "You can join the group by using the 'Add Software' link and agree to the License terms"
+		echo -e "\nPlease email help@vpac.org if you have any questions\n"
+	fi
+
+	if [ -w /usr/local/recluse/nodestatus/software/log ]
+	then
+		echo "user: $USER is not in group: $group, attempted at $(date)" >> /usr/local/recluse/nodestatus/software/log
+	fi
+
+fi

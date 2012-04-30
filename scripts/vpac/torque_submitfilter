@@ -1,0 +1,481 @@
+#!/usr/local/python/2.4.4-gcc/bin/python -E
+"""Perform a series of filters on an input pbs script"""
+
+# Written by Brett Pemberton (brett@vpac.org), Sam Morrison (sam@vpac.org)
+# Copyright (C) 2008 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import xmlrpclib
+import sys, os, pwd
+import getopt
+import commands
+
+help_email = "help@vpac.org"
+url = 'https://www.vpac.org/accounts/xmlrpc/'
+banned_users = ("sudip")
+
+# Set to true when the database or website is down, to stop errors
+database_down = False
+
+def get_user_disk_quota(this_username):
+    """See if the user has a custom disk quota"""
+
+    server = xmlrpclib.Server(url)
+    try:
+        return server.get_disk_quota(this_username)
+    except:
+        print >> sys.stderr, "ERROR: Can't contact the vpac.org accounts system."
+        print >> sys.stderr, "       Sorry, but jobs cannot be submitted at present."
+        print >> sys.stderr, "       Please try again later"
+        sys.exit(-1)
+
+def project_under_quota(this_project_id):
+    """See if this project is currently under quota."""
+
+    server = xmlrpclib.Server(url)
+    try:
+        return server.project_under_quota(this_project_id)
+    except:
+        print >> sys.stderr, "ERROR: Can't contact the vpac.org accounts system."
+        print >> sys.stderr, "       Sorry, but jobs cannot be submitted at present."
+        print >> sys.stderr, "       Please try again later"
+        sys.exit(-1)
+    
+def get_project(this_username, this_project_id=''):
+    """Get the users default project, or confirm if the supplied project is theirs"""
+
+    if this_username == "root":
+        return "FakeRootProject"
+
+    server = xmlrpclib.Server(url)
+    try:
+        this_project = server.get_project(this_username, this_project_id)
+    except:
+        print >> sys.stderr, "ERROR: Can't contact the vpac.org accounts system."
+        print >> sys.stderr, "       Sorry, but jobs cannot be submitted at present."
+        print >> sys.stderr, "       Please try again later"
+        sys.exit(-1)
+
+    if this_project == "None":
+        print >> sys.stderr, "ERROR: You are not a member of any projects."
+        print >> sys.stderr, "       Please apply to join a project via the VPAC website."
+        sys.exit(-1)
+
+    return this_project
+    
+def user_under_disk_quota(this_username):
+    """Check if the user is under the disk quota"""
+
+    if this_username == "root":
+        return True
+
+    status, quota = commands.getstatusoutput('/usr/local/recluse/scripts/vpac/show_user_disk_usage %s' % (this_username))
+
+    if status != 0:
+        print >> sys.stderr, "ERROR: show_user_disk_usage had a problem, please report to %s" % (help_email)
+        sys.exit(-1)
+
+    current_usage = quota.strip()
+    disk_quota = get_user_disk_quota(this_username)
+
+    if disk_quota == "" or current_usage == "":
+        print >> sys.stderr, "ERROR: Your account has an invalid disk quota."
+        print >> sys.stderr, "       Please email %s and report this." % (help_email)
+        sys.exit(-1)
+
+    if int(current_usage) < int(disk_quota):
+        return True
+    else:
+        return False
+
+def check_shell(this_shell):
+    """Check if this shell is a valid one"""
+
+    shells = open('/etc/shells', 'r')
+    valid_shells = shells.readlines()
+    valid_shells = [x.replace('\n', '') for x in valid_shells]
+
+    # allow perl as well, even though it isn't a valid shell
+    valid_shells.append('/usr/bin/perl')
+
+    shells.close()
+    if this_shell in valid_shells:
+        if this_shell == "/bin/sh":
+            return "/bin/bash"
+        return this_shell
+
+    # allow them to run a non-default shell, if it exists and is executable
+    if os.path.isfile(this_shell):
+        if os.access(this_shell, os.X_OK):
+            return this_shell
+
+    where = this_shell.rfind('/')
+    last_part = this_shell[where:].rstrip()
+    for shell_line in valid_shells:
+        if last_part in shell_line:
+            return shell_line
+
+    return False
+
+ 
+if __name__ == "__main__":
+
+    username = pwd.getpwuid(os.getuid()) [0]
+    interactive = False
+
+    if username in banned_users:
+        print >> sys.stderr, "User %s has been blocked from submitting jobs." % (username)
+        print >> sys.stderr, "If you feel this is not correct, please email %s" % (help_email)
+        sys.exit(-1)
+
+    if len(username) > 30:
+        print >> sys.stderr, "Apologies, but your username generates a torque bug."
+        print >> sys.stderr, "We have to stop your jobs for now. Please email %s" % (help_email)
+        sys.exit(-1)
+
+    # Try and get email from .forward
+    homedir = os.path.expanduser('~')
+
+    if os.path.islink(homedir):
+        realhomedir = os.readlink(homedir)
+        if realhomedir.startswith('/nfs/ibm'):
+            print >> sys.stderr, "WARNING: You are still on the old VPAC storage system, due to your running jobs"
+            print >> sys.stderr, "         You may wish to consider not submitting new jobs, to allow yourself to"
+            print >> sys.stderr, "         be automatically moved to the new system."
+            print >> sys.stderr, "         Please email %s if you have any questions." % (help_email)
+    else:
+        realhomedir = homedir
+
+    try:
+        f = open('%s/.forward' % homedir, 'r')
+        email = f.readlines()[2]
+        f.close()
+    except IOError, err:
+        email = "unknown@vpac.org"
+    except IndexError, err:
+        email = f.readlines()
+        f.close()
+
+    #Parse Opts
+    opts, args = getopt.getopt(sys.argv[1:], 'a:A:b:c:C:d:D:e:hIj:k:l:m:M:N:o:p:P:q:r:S:t:T:u:Vv:w:W:Xxz')
+    opts = dict(opts)
+
+    if '-A' in opts:
+        project = opts['-A']
+        new_project = get_project(username, project)
+        if new_project != project:
+            print >> sys.stderr, "ERROR: You are not a member of project %s" % (project)
+            sys.exit(-1)
+
+    if '-M' in opts:
+        email = opts['-M']
+
+    if '-I' in opts:
+        interactive = True
+
+    if not user_under_disk_quota(username):
+        print >> sys.stderr, "ERROR: You are over your disk quota."
+        print >> sys.stderr, "       You cannot submit jobs until you have reduced your disk usage."
+        sys.exit(-1)
+
+    pbs_in = sys.stdin.readlines() 
+
+    if len(pbs_in) == 0:
+        print >> sys.stderr, "ERROR: Your pbs script is empty."
+        sys.exit(-1)
+    
+    first_line = pbs_in[0]
+
+    error_and_die = False
+    newfirstline = ""
+    insert_first_line = False
+
+    if first_line.startswith('#!'):
+        space = first_line.find(' ')
+        if space == 2:
+            nextspace = first_line.find(' ', space+1)
+            shell = first_line[space+1:nextspace].replace('\r', '')
+        else:
+            shell = first_line[2:space].replace('\r', '')
+        newshell = check_shell(shell)
+
+        if newshell == False:
+            error_and_die = True
+            error  = "The shell you specified in your PBS script (%s) does not exist." % (shell)
+            error += "\nYou may wish to email %s to get it installed, or consider using one of the more commonly available shells such as bash." % (help_email)
+            error += "\nUnfortunately, we can't run your job\n"
+        elif newshell == "/bin/bash" and shell == "/bin/sh":
+            newfirstline = "#!%s\n" % (newshell)
+            print >> sys.stderr, "WARNING: The shell you specified in your PBS script (%s)" % (shell)
+            print >> sys.stderr, "         is not recommended for use. We recommend you use %s" % (newshell)
+            print >> sys.stderr, "         Please update your script with the new shell.\n"
+        elif newshell != shell:
+            newfirstline = "#!%s\n" % (newshell)
+            print >> sys.stderr, "WARNING: The shell you specified in your PBS script (%s)" % (shell)
+            print >> sys.stderr, "         does not exist in this location."
+            print >> sys.stderr, "         It can be found at %s instead."% (newshell)
+            print >> sys.stderr, "         Please update your script with the correct location.\n"
+
+    else:
+        if not interactive:
+            newfirstline = "#!/bin/bash\n"
+            insert_first_line = True
+            print >> sys.stderr, "WARNING: You did not specify a shell in the first line of your PBS script."
+            print >> sys.stderr, "         We have assumed you wish to use bash, however please update"
+            print >> sys.stderr, "         your script with a valid shell\n"
+
+    have_hit_command_already = False
+    have_hit_email_already = False
+    have_hit_project_already = False
+    comment_end_line, email_line, project_line, i = 0, 0, 0, 0
+    gaussian_job = False
+    gres_option = False
+    gres_line = False
+    gres = ""
+    gres_divider = '%'
+    matlab_job = False
+    matlab_gres = False
+    matlab_software_line = False
+    software_line = False
+    nodes_line = ""
+    name_line = False
+    fluent_job = False
+    abaqus_job = False
+    abaqus_gres = False
+    old_fluent = False
+    ansys_gres = False
+    schrodinger_job = False
+    hadoop_job = False
+
+    # iterate over rest of lines
+    for line in pbs_in[1:]:
+
+        i += 1
+
+        # check if the previous line ends with a backslash and then an enter
+        # if so, ignore this line
+        if ord(pbs_in[i-1][len(pbs_in[i-1])-1]) == 10 and ord(pbs_in[i-1][len(pbs_in[i-1])-2]) == 92:
+            continue
+
+        if line.count('gaussian') > 0:
+            gaussian_job = True
+
+        if line.count('g03') > 0:
+            gaussian_job = True
+
+        if line.count('g09') > 0:
+            gaussian_job = True
+
+        if line.count('module load fluent') > 0:
+            fluent_job = True
+        
+	if line.count('module load abaqus') > 0:
+            abaqus_job = True
+
+        if line.count('MDCE_MATLAB_EXE') > 0:
+            matlab_job = True
+
+        if line.count('MDCE_DECODE_FUNCTION') > 0:
+            matlab_job = True
+
+        if line.startswith('#PBS -l software') > 0:
+            software_line = i
+
+        if line.startswith('#PBS -l software=MATLAB_Distrib_Comp_Engine') > 0:
+            matlab_software_line = i
+
+        if line.startswith('#PBS -W x=GRES') > 0:
+            gres_option = True
+            gres_line = i
+            gres = line.split('\n')[0]
+            if line.count('aa_r+') > 0:
+                ansys_gres = True
+            if line.count('MATLAB_Distrib_Comp_Engine+') > 0:
+                matlab_gres = True
+            if line.count('fluent') > 0:
+                old_fluent = True
+            if line.count('abaqus') > 0:
+                abaqus_gres = True
+
+        if line.startswith('SCHRODINGER_HOSTS') > 0:
+            schrodinger_job = True
+
+        if '/usr/local/hadoop' in line:
+            hadoop_job = True
+
+        if line.count('/nfs/ibm/' + username) > 0 and not schrodinger_job and not hadoop_job:
+            print >> sys.stderr, "Warning: You appear to be accessing /nfs/ibm/%s directly, instead of using /home/%s" % (username, username)
+            print >> sys.stderr, "         Please amend your script to only access your files via /home, as this may break in the near future"
+
+        if line.count('/nfs/user1/' + username) > 0 and not schrodinger_job and not hadoop_job:
+            print >> sys.stderr, "Warning: You appear to be accessing /nfs/user1/%s directly, instead of using /home/%s" % (username, username)
+            print >> sys.stderr, "         Please amend your script to only access your files via /home, as this may break in the near future"
+
+        if line.count('/nfs/user2/' + username) > 0 and not schrodinger_job and not hadoop_job:
+            print >> sys.stderr, "Warning: You appear to be accessing /nfs/user2/%s directly, instead of using /home/%s" % (username, username)
+            print >> sys.stderr, "         Please amend your script to only access your files via /home, as this may break in the near future"
+
+        # strip out lines with 'please replace' email addresses that users haven't replaced
+        if line.startswith('#PBS -M YourEmail'):
+            continue
+
+        if line.startswith('#PBS -M email@unimelb.edu.au'):
+            continue
+
+        if line.startswith('#PBS -S'):
+            shell = line.split(' ')[2].rstrip()
+            newshell = check_shell(shell)
+
+            if newshell == False:
+                error_and_die = True
+                error  = "The shell you specified in your PBS script (%s) does not exist" % (shell)
+                error += "\nYou may wish to email %s to get it installed, or consider using one of the more commonly available shells such as bash." % (help_email)
+                error += "\nUnfortunately, we can't run your job\n"
+            elif newshell == "/bin/bash" and shell == "/bin/sh":
+                newfirstline = "#!%s\n" % (newshell)
+                print >> sys.stderr, "Warning: the shell you specified in your PBS script (%s) is not recommended for use" % (shell)
+                print >> sys.stderr, "We recommend you use %s instead.  Please update your script with the new shell\n" % (newshell)
+            elif newshell != shell:
+                pbs_in[i] = "#PBS -S %s\n" % (newshell)
+                newfirstline = "#!%s\n" % (newshell)
+                error_and_die = False
+                print >> sys.stderr, "Warning: the shell you specified in your PBS script (%s) does not exist in this location" % (shell)
+                print >> sys.stderr, "It can be found at %s instead.  Please update your script with the correct location\n" % (newshell)
+            else:
+                newfirstline = "#!%s\n" % (newshell)
+                error_and_die = False
+
+        if line.startswith('#PBS -N'):
+            name_line = i
+
+        if line.startswith('#PBS -M'):
+            have_hit_email_already = True
+
+        if line.startswith('#PBS -l nodes='):
+            nodes_line = line
+
+        if line.startswith('#PBS -A'):
+            project_id = line.split(' ')[2].strip()
+            project = get_project(username, project_id)
+            pbs_in[i] = "#PBS -A %s\n" % (project)
+            have_hit_project_already = True
+
+        if (not line.startswith('#')) and line != "\n" and line != "\r" and line != "\r\n" and line != "\n\r":
+
+            if comment_end_line == 0:
+                comment_end_line = i
+
+            if not have_hit_project_already:
+                project = get_project(username)
+                project_line = i
+                have_hit_project_already = True
+
+            if not have_hit_email_already:
+                email_line = i
+                have_hit_email_already = True
+
+    if email_line > 0:
+        pbs_in.insert(email_line, "#PBS -M %s\n" % (email))
+    if project_line > 0:
+        pbs_in.insert(project_line, "#PBS -A %s\n" % (project))
+
+    # Force gaussian jobs to run in production partition
+    # Should not be necessary any more, since repairs - bp 20100111
+    #if gaussian_job and username != "brett":
+    #    pbs_in.insert(comment_end_line, "#PBS -l partition=production\n")
+
+    if newfirstline != "":
+        if insert_first_line:
+            pbs_in.insert(0, newfirstline)
+        else:
+            pbs_in[0] = newfirstline
+
+    if not have_hit_project_already:
+        project = get_project(username)
+
+# old version, where it still queues
+#    if project_under_quota(project) == False:
+#            print >> sys.stderr, "This job has been queued, but your project %s is over quota." % (project)
+#            print >> sys.stderr, "The job will not run until the projects 90 day usage is below quota."
+#            print >> sys.stderr, "For more information please see http://vpac.org/quota"
+
+
+# BA agreed disabling quotas as a test - 09/09/09
+#    if project_under_quota(project) == False:
+#        print >> sys.stderr, "Your project %s is over quota." % (project)
+#        print >> sys.stderr, "This job has not been accepted."
+#        print >> sys.stderr, "For more information please see http://vpac.org/quota\n"
+#        sys.exit(-1)
+
+# BP
+# Die if they are running fluent and not requesting licenses, for now.
+#
+    if (fluent_job and not ansys_gres) or old_fluent:
+        print >> sys.stderr, "ERROR: You are using Fluent and not requesting licenses properly"
+        print >> sys.stderr, "Please read this tutorial for details: http://www.vpac.org/node/353"
+        print >> sys.stderr, "If you have further problems, please email %s for assistance.\n" % (help_email)
+        sys.exit(-1)
+
+    if error_and_die == True:
+        print >> sys.stderr, error
+        sys.exit(-1)
+
+    if (abaqus_job and not abaqus_gres):
+        print >> sys.stderr, "WARNING: You are using Abaqus and not requesting licenses properly"
+        print >> sys.stderr, "If you don't understand this message, please email %s for assistance.\n" % (help_email)
+
+    if software_line:
+        print >> sys.stderr, "WARNING: You have specified a \"-l software\" line in your pbs script."
+        print >> sys.stderr, "This is not the recommended method for requesting software licenses."
+        print >> sys.stderr, "Please read this tutorial for details: http://www.vpac.org/node/353"
+        print >> sys.stderr, "If you have further problems, please email %s for assistance.\n" % (help_email)
+        if matlab_software_line:
+            pbs_in[matlab_software_line] = ""
+
+    if ',' in gres:
+        print >> sys.stderr, "WARNING: You have specified a GRES option with a comma separator."
+        print >> sys.stderr, "This is no longer valid. The separator needs to be a % symbol."
+        print >> sys.stderr, "Your submitted job has been modified, but your original script needs correcting."
+        print >> sys.stderr, "If you have further problems, please email %s for assistance.\n" % (help_email)
+        gres = gres.replace(',','%')
+        pbs_in[gres_line] = gres + "\n"
+
+    if matlab_job and not matlab_gres:
+        if not nodes_line:
+            node_count = 1
+        else:
+            nodes = nodes_line.split()[2]
+            if nodes.count(':') == 0:
+                node_count = nodes.split('=')[1]
+            else:
+                nodes_split = nodes.split(':')
+                n_count = nodes_split[0].split('=')[1]
+                p_count = nodes_split[1].split('=')[1]
+                node_count = int(n_count) * int(p_count)
+        matlab_software = "MATLAB_Distrib_Comp_Engine+" + str(node_count)
+        if gres_option:
+            gres = gres + gres_divider + matlab_software
+        else:
+            gres = "#PBS -W x=GRES:" + matlab_software
+
+        if not gres_line:
+            if name_line:
+                pbs_in.insert(name_line, gres +"\n")
+            else:
+                pbs_in.insert(comment_end_line, gres +"\n")
+        else:
+            pbs_in[gres_line] = gres + "\n"
+
+    sys.stdout.writelines(pbs_in)

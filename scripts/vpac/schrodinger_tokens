@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# schrodinger_tokens
+#
+# query schrodinger license server in a meaningful way to display token
+# count to users
+#
+# Written by Michael Kuiper <mike@vpac.org>
+# Copyright (C) 2006 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+if [ -z $SCHRODINGER ]
+then
+	source /etc/profile.d/modules.sh
+	module load schrodinger
+fi
+
+tmp_file=$HOME/.temp_schrodinger_license_STAT_file
+
+$SCHRODINGER/licadmin STAT > $tmp_file
+
+tokens=$(grep "of SUITE" $tmp_file | awk '{print "Total:\t\t" $11 " of " $6 " available tokens used" }')
+users=$(grep "of MAESTRO" $tmp_file | awk '{print $3 "\t" $11 " current vpac schrodinger users online\n"}')
+
+rm -f $tmp_file
+
+echo
+echo "__Schrodinger token count___________________ " 
+echo
+echo $tokens
+echo -e $users
+echo
+echo "________Tokens needed per module________" 
+echo "   Module  tokens: |   Module    tokens:"
+echo "    Prime     8    |  MacroModel    2 "
+echo "    Glide     5    |   Jaguar       2 "
+echo "    Phase     5    |   Qikprop      2 "
+echo "   Liaison    4    |   Impact       1 "
+echo "    QSite     4    |   Strike       1 "    
+echo "  pKa Pred    3    |   LigPrep      1 "
+echo

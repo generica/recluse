@@ -1,0 +1,77 @@
+#!/bin/bash
+
+CONFIG=/usr/local/recluse/config
+[ -r "$CONFIG" ] || echo "Can't source $CONFIG"
+[ -r "$CONFIG" ] || exit 0
+source $CONFIG
+
+if test "${HAS_INTERCONNECT+set}" = set;
+then                                    
+	host_interconnect=$HAS_INTERCONNECT
+else                                       
+	host_interconnect=1                
+fi                                         
+
+if [ $host_interconnect -eq 0 ]
+then
+	exit 0
+fi
+
+if [ ! -e /sys/class/infiniband_verbs/uverbs0/ibdev ]
+then
+	echo "ERROR infiniband device not found"
+	exit 1
+fi
+
+# This could be a software issue rather than hardware..
+#
+#       count=$(dmesg | grep -c "HW2SW_MPT failed")
+#
+#       if [ $count -ne 0 ]
+#       then
+#               echo "ERROR infiniband board failures"
+#               exit 1
+#       fi
+
+count=$(dmesg | grep -c "INFO: task mthca_catas")
+
+if [ $count -ne 0 ]
+then
+	echo "ERROR infiniband board warnings"
+	exit 1
+fi
+
+if [ ! -c /dev/infiniband/rdma_cm ]
+then
+	echo "ERROR infiniband card not detected"
+	exit 1
+fi
+
+if [ -x /usr/bin/ibv_devinfo ]
+then
+	count=$(/usr/bin/ibv_devinfo | grep -c "PORT_DOWN")
+
+	if [ $count -ne 0 ]
+	then
+		echo "ERROR infiniband link is down (check cable)"
+		exit 1
+	fi
+
+	count=$(/usr/bin/ibv_devinfo | egrep -c 'state:.*PORT_ACTIVE')
+
+	if [ $count -ne 1 ]
+	then
+		echo "ERROR infiniband link not active"
+		exit 1
+	fi
+fi
+
+
+# Check for umad module for CS
+
+count=$(/sbin/lsmod | grep -c "^ib_umad")
+if [ $count -ne 1 ]
+then
+	echo "ERROR ib_umad module not loaded"
+	exit 1
+fi

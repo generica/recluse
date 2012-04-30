@@ -1,0 +1,10 @@
+#!/bin/bash
+
+count=$(grep -c "HPET not enabled in BIOS. You might try hpet=force boot option" /var/log/dmesg)
+
+if [ $count -ne 0 ]
+then
+	echo "ERROR HPET not enabled in BIOS"
+	exit 1
+fi
+

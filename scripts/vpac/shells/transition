@@ -1,0 +1,12 @@
+#!/bin/bash
+
+clear
+
+echo "Your account is temporarily locked while we move your home directory."
+echo ""
+echo "Please wait an hour before trying to log in again."
+echo "If you have any questions, please email help@vpac.org"
+
+sleep 60
+
+exit 1

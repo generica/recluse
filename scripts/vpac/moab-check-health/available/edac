@@ -1,0 +1,6 @@
+#!/bin/bash
+
+if [ -x /usr/local/sbin/edac ]; then
+        /usr/local/sbin/edac
+	exit $?
+fi

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+quota_version=$(quota -V | awk -F. '/version/{print $2}')
+
+if [ $quota_version -ne 17 ]
+then
+	echo "ERROR quota version on node not most recent"
+	exit 1
+fi
+

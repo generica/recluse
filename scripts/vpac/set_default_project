@@ -1,0 +1,58 @@
+#!/usr/local/sbin/known_good_python -E
+
+# Written by Brett Pemberton (brett@vpac.org), Sam Morrison (sam@vpac.org)
+# Copyright (C) 2009 Victorian Partnership for Advanced Computing
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import xmlrpclib
+import sys, os, pwd
+import getpass
+
+url = 'https://www.vpac.org/accounts/xmlrpc/'
+
+username = pwd.getpwuid(os.getuid()) [0]
+
+def set_default_project(username, password, project):
+    server = xmlrpclib.Server(url)
+
+    try:
+        return_value, message = server.change_default_project(username, password, project)
+    except Exception, e:
+        if hasattr(e, 'faultCode'):
+           if e.faultCode == 81:
+               print >> sys.stderr, "ERROR: Incorrect password"
+               sys.exit(-1)
+        print >> sys.stderr, "ERROR: Can't contact the vpac.org accounts system.  Sorry, but projects cannot be altered at present.\nPlease try again later"
+        sys.exit(-1)
+
+    if return_value != 0:
+        print >> sys.stderr, "ERROR: " + message
+        sys.exit(-1)
+    else:
+        print >> sys.stdout, "Default project successfully changed to " + project
+
+    return return_value
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print "usage: set_default_project <project id>"
+        sys.exit(-1)
+
+    project = sys.argv[1]
+    password = getpass.getpass()
+
+    return_value = set_default_project(username, password, project)
+
+    sys.exit(return_value)

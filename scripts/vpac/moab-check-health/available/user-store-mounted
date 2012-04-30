@@ -1,0 +1,15 @@
+#!/bin/bash
+
+CONFIG=/usr/local/recluse/config
+[ -r "$CONFIG" ] || echo "Can't source $CONFIG"
+[ -r "$CONFIG" ] || exit 0
+source $CONFIG
+
+count=$(grep -c "^$storage_server" /proc/mounts)
+
+if [ $count -lt $storage_server_mounts ]
+then
+        echo "ERROR nfs user store not fully mounted"
+        exit 1
+fi
+

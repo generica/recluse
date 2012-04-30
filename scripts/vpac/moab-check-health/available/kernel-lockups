@@ -1,0 +1,93 @@
+#!/bin/bash
+
+DMESGFILE=$(mktemp) || exit 1
+dmesg > $DMESGFILE
+
+count=$(grep -Ec "RCU detected CPU . stall" $DMESGFILE)
+
+if [ $count -ne 0 -a ! -e /usr/local/recluse/nodestatus/forcestatus/$(hostname)-stall ]
+then
+        echo "ERROR kernel detected CPU stall"
+	rm -f $DMESGFILE
+        exit 1
+fi
+
+count=$(grep -Ec "BUG: soft lockup" $DMESGFILE)
+
+if [ $count -ne 0 ]
+then
+        echo "ERROR kernel soft lockup errors"
+	rm -f $DMESGFILE
+        exit 1
+fi
+
+count=$(grep -Ec "kernel BUG at lib/list_debug.c:72" $DMESGFILE)
+
+if [ $count -ne 0 ]
+then
+        echo "ERROR known pre-2.6.25 kernel bug in list_debug.c"
+	rm -f $DMESGFILE
+        exit 1
+fi
+
+# taking this out, seems to be just storage problems - bp july 10 2008
+# putting back in since it might be responsible for 'logless hangs'
+
+count=$(grep -Ec "INFO: task .* blocked" $DMESGFILE)
+
+if [ $count -ne 0 -a ! -e /usr/local/recluse/nodestatus/forcestatus/$(hostname)-blocked ]
+then
+	echo "ERROR kernel task blocked"
+	rm -f $DMESGFILE
+	exit 1
+fi
+
+count=$(grep -Ec "BUG:" $DMESGFILE)
+
+if [ $count -ne 0 ]
+then
+        echo "ERROR uncaught kernel BUG report"
+	rm -f $DMESGFILE
+        exit 1
+fi
+
+count=$(grep -Ec "kernel BUG" $DMESGFILE)
+
+if [ $count -ne 0 ]
+then
+        echo "ERROR uncaught kernel BUG report"
+	rm -f $DMESGFILE
+        exit 1
+fi
+
+count=$(grep -Ec "invalid opcode:" $DMESGFILE)
+
+if [ $count -ne 0 ]
+then
+        echo "ERROR kernel invalid opcode report"
+	rm -f $DMESGFILE
+        exit 1
+fi
+
+# have to take this out too to stop blocked jobs being reported
+# bp - july 10 2008
+#
+#count=$(grep -Ec "Call Trace:" $DMESGFILE)
+#
+#if [ $count -ne 0 ]
+#then
+#       echo "ERROR uncaught kernel report"
+#       rm -f $DMESGFILE
+#       exit 1
+#fi
+
+count=$(grep -Ec "Killed process" $DMESGFILE)
+
+if [ $count -ne 0 -a ! -e /usr/local/recluse/nodestatus/forcestatus/$(hostname)-oom ]
+then
+        echo "ERROR kernel has killed processes due to OOM"
+	rm -f $DMESGFILE
+        exit 1
+fi
+
+rm -f $DMESGFILE

@@ -1,0 +1,38 @@
+#!/bin/bash
+
+CONFIG=/usr/local/recluse/config
+[ -r "$CONFIG" ] || echo "Can't source $CONFIG"
+[ -r "$CONFIG" ] || exit 0                     
+source $CONFIG
+
+if test "${HAS_ECC_RAM+set}" = set;
+then
+	host_ecc=$HAS_ECC_RAM
+else
+	host_ecc=1
+fi
+
+cpu=$(grep -m1 vendor_id /proc/cpuinfo | awk '{print $3}')
+
+if [ $cpu == "GenuineIntel" ]
+then
+	dmi=7
+elif [ $cpu == "AuthenticAMD" ]
+then
+	dmi=16
+else
+	echo "ERROR Unknown CPU"
+	exit 1
+fi
+
+if [ $host_ecc -eq 1 ]
+then
+	count=$(/usr/sbin/dmidecode -t $dmi | grep -c "Error Correction Type: None")
+
+	if [ $count -ne 0 ]
+	then
+		echo "ERROR ECC disabled in BIOS"
+		exit 1
+	fi
+
+fi
