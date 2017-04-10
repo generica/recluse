@@ -6,6 +6,7 @@
 #
 # Written by Brett Pemberton, brett@vpac.org
 # Copyright (C) 2007 Victorian Partnership for Advanced Computing
+# Amendments by Lev Lafayette, 2016, University of Melbourne
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -68,24 +69,12 @@ check_if_running $job
 leadnode=$(qstat -f $job | awk 'BEGIN{ FS="[ /]+" }/exec_host/{ print $4 }')
 hashname=$(qstat -f $job | awk '/Job Id/{print $3}' | sed -e 's/edda-m.vpac.org/edda/')
 
-if [ "$1" == "t" ]
-then
-	ssh $leadnode "ls -l /tmp/${job}.*/"
-elif [ "$1" == "m" ]
-then
-	ssh $leadnode "/usr/local/recluse/scripts/sbin/memory_used_by_job ${job}"
-elif [ "$1" == "o" ]
-then
-	ssh $leadnode "cat /usr/spool/PBS/spool/${hashname}.OU"
-elif [ "$1" == "e" ]
-then
-	ssh $leadnode "cat /usr/spool/PBS/spool/${hashname}.ER"
-elif [ "$1" == "p" ]
-then
-	ssh $leadnode "cat /usr/spool/PBS/mom_priv/jobs/${hashname}.SC"
-elif [ "$1" == "r" ]
-then
-	ssh $leadnode "ps axu | egrep -f /dev/cpuset/torque/${hashname}/tasks"
-else
-	usage
-fi	
+case "$1" in
+	t) ssh $leadnode "ls -l /tmp/${job}.*/" ;;
+	m) ssh $leadnode "/usr/local/recluse/scripts/sbin/memory_used_by_job ${job}" ;;
+	o) ssh $leadnode "cat /usr/spool/PBS/spool/${hashname}.OU" ;;
+	e) ssh $leadnode "cat /usr/spool/PBS/spool/${hashname}.ER" ;;
+	p) ssh $leadnode "cat /usr/spool/PBS/mom_priv/jobs/${hashname}.SC" ;;
+	r) ssh $leadnode "ps axu | egrep -f /dev/cpuset/torque/${hashname}/tasks" ;;
+	*) usage ;;
+esac
